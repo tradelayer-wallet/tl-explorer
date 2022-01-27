@@ -1,0 +1,72 @@
+:root {
+    --background: #e6d3ec;
+    --almostWhite: #f3ded4;
+    --violet2: #1C1932;
+    --softGrey: #F6F7FB;
+    --hardGrey: #8B939F;
+    --darkBlue: #2C304A;
+    --darkBlue2: #1B1E34;
+    --greyBlue: #4C4967;
+    --lightBlue: #45A8FB;
+    --blue: #306BF3;
+    --mossGreen: #149971;
+    --white: #ffffff;
+    --darkGrey: #9A9DA3;
+    --greenSuccess: #36C970;
+    --redError: #EF5252;
+    --red2: #c23a3a;
+}
+
+@font-face {
+    font-family: 'PlovdivSans';
+    font-style: normal;
+    font-weight: normal;
+    src: url("./fonts/PlovdivSans.otf");
+}
+
+@font-face {
+    font-family: 'PlovdivScript';
+    font-style: normal;
+    font-weight: normal;
+    src: url("./fonts/PlovdivScript.otf");
+}
+
+.simple-table {
+    width: 100%;
+    border-collapse: collapse;
+    tr {
+        background-color: var(--hardGrey);
+        td {
+            padding: 0 1rem;
+            border: 1px solid var(--darkBlue);
+            border-right: none;
+            border-bottom: none;
+            overflow: hidden;
+            height: 2rem;
+            align-items: center;
+            color: var(--darkBlue2);
+            white-space: nowrap;
+            &:last-child {
+                border-right: 1px solid var(--darkBlue);
+                justify-content: center;
+            }
+        }
+
+        &:last-child {
+            border-bottom: 1px solid var(--darkBlue);
+        }
+
+        &:nth-child(even) {
+            background-color: var(--softGrey);
+        }
+    }
+}
+
+.page {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 2rem;
+    align-items: center;
+}

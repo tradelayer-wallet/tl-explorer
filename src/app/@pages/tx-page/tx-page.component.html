@@ -1,0 +1,10 @@
+<div class="page tx-page-container">
+    <div class="tx-info-container">
+        <table class="simple-table" *ngIf='txData'>
+            <tr *ngFor='let row of txData | keyvalue'>
+                <td>{{ row.key }}</td>
+                <td>{{ row.value || '-' }}</td>
+            </tr>
+        </table>
+    </div>
+</div>

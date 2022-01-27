@@ -1,0 +1,12 @@
+<div class="page address-page-container">
+    <div class="title">
+        {{ address }}
+    </div>
+    <div class="balance-container">
+        <table class="simple-table" *ngIf='balanceData?.length'>
+            <tr *ngFor='let row of balanceData'>
+                <td *ngFor='let cell of row'>{{ cell  || '-'  }}</td>
+            </tr>
+        </table>
+    </div>
+</div>

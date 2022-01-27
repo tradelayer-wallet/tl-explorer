@@ -1,0 +1,57 @@
+:host {
+    .app-container {
+        height: 100%;
+        width: 100%;
+        .header {
+            height: 5rem;
+            background-color: var(--darkBlue);
+            box-shadow: 0 0 0.5rem 0.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 3rem;
+            .left-side {
+                font-size: 2rem;
+                color: var(--almostWhite);
+                font-family: PlovdivScript;
+                user-select: none;
+                white-space: nowrap;
+                cursor: pointer;
+            }
+            .right-side {
+                display: flex;
+                input {
+                    height: 2rem;
+                    width: 25rem;
+                    border-radius: 0;
+                    border: none;
+                    font-size: 1.2rem;
+                    padding: 0 0.25rem;
+                    &:focus {
+                        outline: none;
+                    }
+                }
+                button {
+                    border: none;
+                    height: 2rem;
+                    background-color: var(--greenSuccess);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0 0.5rem;
+                    cursor: pointer;
+                    color: var(--white);
+                    &:disabled {
+                        cursor: unset;
+                        background-color: var(--mossGreen);
+                        color: black;
+                    }
+                }
+            }
+        }
+        .content {
+            height: calc(100% - 5rem);
+            width: 100%;
+        }
+    }
+}
