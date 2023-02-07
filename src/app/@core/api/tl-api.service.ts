@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { environment } from "src/environments/environment";
 import { HttpClient } from "@angular/common/http";
-import { Observable } from "rxjs";
+import { Observable, tap } from "rxjs";
 
 @Injectable({
     providedIn: 'root',
@@ -48,5 +48,12 @@ export class TradeLayerApi {
     private get(path: string) : Observable<any> {
         const url = `${this.apiUrl}${path}`;
         return this.http.get(url)
+            .pipe(
+                tap((res: any) => {
+                    if (res.error || !res.data) {
+                        throw res.error;
+                    }
+                })
+            )
     }
 }

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, finalize, tap } from 'rxjs';
 import { PropertyService } from 'src/app/@core/services/propety.service';
 
 @Component({
@@ -22,22 +23,20 @@ export class PropertyPageComponent implements OnInit {
 
   private getPropertyData() {
     const propId = parseFloat(this.route.snapshot.params?.['id']) || null;
-    if (!propId) return;
+    if (!propId) {
+      return;
+    }
     this.propLoading = true;
     this.propertyService.getPropData(propId)
-      .subscribe({
-        next: (res) => {
-          if (res.error || !res.data) {
-            this.router.navigate(['error']);
-          } else {
-            this.propData = res.data;
-          }
-          this.propLoading = false;
-        },
-        error: (err) => {
-          this.router.navigate(['error']);
-          this.propLoading = false;
-        }
-      });
+      .pipe(
+        tap((res) => {
+          this.propData = res.data;
+        }),
+        finalize(() => this.propLoading = false),
+        catchError((error) => {
+          return this.router.navigate(['error']);
+        })
+      )
+      .subscribe();
   }
 }

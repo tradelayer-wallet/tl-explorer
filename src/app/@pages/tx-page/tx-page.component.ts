@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, finalize, tap } from 'rxjs';
 import { TxService } from 'src/app/@core/services/tx.service';
 
 @Component({
@@ -22,22 +23,22 @@ export class TxPageComponent implements OnInit{
 
   private getTxData() {
     const txId = this.route.snapshot.params?.['txid'] || null;
-    if (!txId) return;
+    if (!txId) {
+      return;
+    }
     this.txLoading = true;
     this.txService.getTxData(txId)
-      .subscribe({
-        next: (res) => {
-          if (res.error || !res.data) {
-            this.router.navigate(['error']);
-          } else {
-            this.txData = res.data;
-          }
+      .pipe(
+        tap((res) => {
+          this.txData = res.data;
+        }),
+        finalize(() => {
           this.txLoading = false;
-        },
-        error: (err) => {
-          this.router.navigate(['error']);
-          this.txLoading = false;
-        }
-      });
+        }),
+        catchError(() => {
+          return this.router.navigate(['error']);
+        })
+      )
+      .subscribe();
   }
 }

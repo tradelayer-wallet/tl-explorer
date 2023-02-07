@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { catchError, finalize, of, tap } from 'rxjs';
 import { ChainService } from 'src/app/@core/services/chain.service';
 import { PropertyService } from 'src/app/@core/services/propety.service';
 import { convertArrayToTable } from 'src/app/@utils/convert';
@@ -29,39 +30,29 @@ export class HomePageComponent implements OnInit {
   getProperties() {
     this.propertiesLoading = true;
     this.propertyService.getProperties()
-      .subscribe({
-        next: (res) => {
-          if (res.error || !res.data) {
-            console.log('Error')
-          } else {
-            this.properties = convertArrayToTable(res.data);;
-          }
-          this.propertiesLoading = false;
-        },
-        error: (err) => {
+      .pipe(
+        tap((res) => this.properties = convertArrayToTable(res.data)),
+        finalize(() => this.propertiesLoading = false),
+        catchError((err) => {
           console.log(err);
-          this.propertiesLoading = false;
-        }
-      });
+          return of();
+        })
+      )
+      .subscribe();
   }
 
   getMainData() {
     this.chainInfoLoading = true;
     this.chainService.getChainInfo()
-      .subscribe({
-        next: (res) => {
-          if (res.error || !res.data) {
-            console.log('Error')
-          } else {
-            this.chainInfo = res.data;
-          }
-          this.chainInfoLoading = false;
-        },
-        error: (err) => {
-          console.log(err);
-          this.chainInfoLoading = false;
-        }
-      });
+      .pipe(
+        tap((res => this.chainInfo = res.data)),
+        finalize(() => this.chainInfoLoading = false),
+        catchError((error) => {
+          console.log(error)
+          return of();
+        })
+      )
+      .subscribe();
   }
 
   goToProp(id: number) {

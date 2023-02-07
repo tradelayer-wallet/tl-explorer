@@ -25,7 +25,9 @@ export class AppComponent {
   }
 
   async search() {
-    if (!this.searchValue) return;
+    if (!this.searchValue) {
+      return;
+    }
     this.searchInProgress = true;
     const value = this.searchValue;
     this.searchValue = '';
@@ -37,7 +39,6 @@ export class AppComponent {
         : ['error'];
     this.router.navigate(routeArray);
     this.searchInProgress = false;
-    return;
   }
   
   navigateToHome() {

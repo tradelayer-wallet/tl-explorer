@@ -27,7 +27,9 @@ export class AddressPageComponent implements OnInit {
 
   getAddressBalance() {
     const address = this.address || null;
-    if (!address) return;
+    if (!address) {
+      return;
+    }
     this.balanceLoading = true;
     this.addressService.getBalance(address)
       .subscribe({
