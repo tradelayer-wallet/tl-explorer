@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, finalize, tap } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 import { TxService } from 'src/app/@core/services/tx.service';
 
 @Component({
@@ -8,8 +8,7 @@ import { TxService } from 'src/app/@core/services/tx.service';
   styleUrls: ['./tx-page.component.scss']
 })
 export class TxPageComponent implements OnInit{
-  txLoading: boolean = false;
-  txData: any = null;
+  txData$: Observable<any> = of(null);
 
   constructor(
     private route: ActivatedRoute,
@@ -18,27 +17,19 @@ export class TxPageComponent implements OnInit{
   ) { }
 
   ngOnInit(): void {
-    this.getTxData();
+    this.txData$ = this.getTxData();
   }
 
-  private getTxData() {
+  private getTxData():Observable<any> {
     const txId = this.route.snapshot.params?.['txid'] || null;
     if (!txId) {
-      return;
+      return of(null);
     }
-    this.txLoading = true;
-    this.txService.getTxData(txId)
+    return this.txService.getTxData(txId)
       .pipe(
-        tap((res) => {
-          this.txData = res.data;
-        }),
-        finalize(() => {
-          this.txLoading = false;
-        }),
         catchError(() => {
           return this.router.navigate(['error']);
         })
-      )
-      .subscribe();
+      );
   }
 }

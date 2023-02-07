@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, finalize, tap } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 import { PropertyService } from 'src/app/@core/services/propety.service';
 
 @Component({
@@ -8,8 +8,7 @@ import { PropertyService } from 'src/app/@core/services/propety.service';
   styleUrls: ['./property-page.component.scss']
 })
 export class PropertyPageComponent implements OnInit {
-  propLoading: boolean = false;
-  propData: any = null;
+  propData$: Observable<any> = of(null);
 
   constructor(
     private propertyService: PropertyService,
@@ -18,25 +17,19 @@ export class PropertyPageComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.getPropertyData();
+    this.propData$ = this.getPropertyData();
   }
 
   private getPropertyData() {
     const propId = parseFloat(this.route.snapshot.params?.['id']) || null;
     if (!propId) {
-      return;
+      return of(null);
     }
-    this.propLoading = true;
-    this.propertyService.getPropData(propId)
+    return this.propertyService.getPropData(propId)
       .pipe(
-        tap((res) => {
-          this.propData = res.data;
-        }),
-        finalize(() => this.propLoading = false),
         catchError((error) => {
           return this.router.navigate(['error']);
         })
-      )
-      .subscribe();
+      );
   }
 }

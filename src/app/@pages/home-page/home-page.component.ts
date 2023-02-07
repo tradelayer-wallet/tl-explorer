@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, finalize, of, tap } from 'rxjs';
+import { catchError, map, Observable, of, tap } from 'rxjs';
 import { ChainService } from 'src/app/@core/services/chain.service';
 import { PropertyService } from 'src/app/@core/services/propety.service';
 import { convertArrayToTable } from 'src/app/@utils/convert';
@@ -11,10 +11,8 @@ import { convertArrayToTable } from 'src/app/@utils/convert';
   styleUrls: ['./home-page.component.scss']
 })
 export class HomePageComponent implements OnInit {
-  propertiesLoading: boolean = false;
-  chainInfoLoading: boolean = false;
-  chainInfo: any = null;
-  properties: any[] = [];
+  mainChainInfo$: Observable<any> = of();
+  properties$: Observable<any> = of();
 
   constructor(
     private propertyService: PropertyService,
@@ -23,36 +21,29 @@ export class HomePageComponent implements OnInit {
   ) {  }
 
   ngOnInit(): void {
-    this.getProperties();
-    this.getMainData();
+    this.properties$ = this.getProperties();
+    this.mainChainInfo$ = this.getMainData();
   }
 
-  getProperties() {
-    this.propertiesLoading = true;
-    this.propertyService.getProperties()
+  getProperties(): Observable<any> {
+    return this.propertyService.getProperties()
       .pipe(
-        tap((res) => this.properties = convertArrayToTable(res.data)),
-        finalize(() => this.propertiesLoading = false),
+        map(convertArrayToTable),
         catchError((err) => {
           console.log(err);
-          return of();
+          return of([]);
         })
-      )
-      .subscribe();
+      );
   }
 
   getMainData() {
-    this.chainInfoLoading = true;
-    this.chainService.getChainInfo()
+    return this.chainService.getChainInfo()
       .pipe(
-        tap((res => this.chainInfo = res.data)),
-        finalize(() => this.chainInfoLoading = false),
         catchError((error) => {
           console.log(error)
-          return of();
+          return of({});
         })
-      )
-      .subscribe();
+      );
   }
 
   goToProp(id: number) {

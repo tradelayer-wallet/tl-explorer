@@ -2,11 +2,13 @@
     <div class="title">
         {{ address }}
     </div>
-    <div class="balance-container">
-        <table class="simple-table" *ngIf='balanceData?.length'>
-            <tr *ngFor='let row of balanceData'>
-                <td *ngFor='let cell of row'>{{ cell  || '-'  }}</td>
+    <div class="balance-container"  *ngIf="balanceData$ | async as balanceData; else loading">
+        <table class="simple-table" *ngIf="balanceData.length; else noData">
+            <tr *ngFor="let row of balanceData">
+                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
             </tr>
         </table>
     </div>
 </div>
+<ng-template #loading>Loading...</ng-template>
+<ng-template #noData>No data!</ng-template>

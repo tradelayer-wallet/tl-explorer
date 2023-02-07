@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, Observable, of, map } from 'rxjs';
 import { AddressService } from 'src/app/@core/services/address.service';
 import { convertArrayToTable } from 'src/app/@utils/convert';
 
@@ -8,8 +9,7 @@ import { convertArrayToTable } from 'src/app/@utils/convert';
   styleUrls: ['./address-page.component.scss']
 })
 export class AddressPageComponent implements OnInit {
-  balanceLoading: boolean = false;
-  balanceData: any[] = [];
+  balanceData$: Observable<any[]> = of([]);
 
   constructor(
     private addressService: AddressService,
@@ -18,7 +18,7 @@ export class AddressPageComponent implements OnInit {
   ) {}
   
   ngOnInit(): void {
-    this.getAddressBalance();
+    this.balanceData$ = this.getAddressBalance();
   }
   
   get address() {
@@ -28,24 +28,16 @@ export class AddressPageComponent implements OnInit {
   getAddressBalance() {
     const address = this.address || null;
     if (!address) {
-      return;
+      return of([]);
     }
-    this.balanceLoading = true;
-    this.addressService.getBalance(address)
-      .subscribe({
-        next: (res) => {
-          console.log(res)
-          if (res.error || !res.data) {
-            this.router.navigate(['error']);
-          } else {
-            this.balanceData = convertArrayToTable(res.data);
-          }
-          this.balanceLoading = false;
-        },
-        error: (err) => {
+    return this.addressService.getBalance(address)
+      .pipe(
+        map(convertArrayToTable),
+        catchError(err => {
+          console.log(err)
           this.router.navigate(['error']);
-          this.balanceLoading = false;
-        }
-      });
+          return of([]);
+        })
+      )
   }
 }

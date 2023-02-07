@@ -1,10 +1,12 @@
 <div class="page property-page-container">
-    <div class="prop-info-container">
-        <table class="simple-table" *ngIf='propData'>
-            <tr *ngFor='let row of propData | keyvalue'>
+    <div class="prop-info-container" *ngIf="propData$ | async as propData; else loading">
+        <table class="simple-table"  >
+            <tr *ngFor="let row of propData | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || '-' }}</td>
+                <td>{{ row.value || "-" }}</td>
             </tr>
         </table>
     </div>
 </div>
+<ng-template #loading>Loading...</ng-template>
+<ng-template #noData>No data!</ng-template>

@@ -1,10 +1,12 @@
 <div class="page tx-page-container">
-    <div class="tx-info-container">
-        <table class="simple-table" *ngIf='txData'>
-            <tr *ngFor='let row of txData | keyvalue'>
+    <div class="tx-info-container" *ngIf="txData$ | async as txData; else loading">
+        <table class="simple-table">
+            <tr *ngFor="let row of txData | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || '-' }}</td>
+                <td>{{ row.value || "-" }}</td>
             </tr>
         </table>
     </div>
 </div>
+<ng-template #loading>Loading...</ng-template>
+<ng-template #noData>No data!</ng-template>

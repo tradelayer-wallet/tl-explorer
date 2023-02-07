@@ -1,17 +1,19 @@
 <div class="home-container page">
-    <div class="main-info-container">
-        <table class="simple-table" *ngIf='chainInfo'>
-            <tr *ngFor='let row of chainInfo | keyvalue'>
+    <div class="main-info-container" *ngIf="mainChainInfo$ | async as mainChainInfo; else loading">
+        <table class="simple-table" *ngIf="mainChainInfo; else noItems">
+            <tr *ngFor="let row of mainChainInfo | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || '-'  }}</td>
+                <td>{{ row.value || "-"  }}</td>
             </tr>
         </table>
     </div>
-    <div class="tokens-info-container">
-        <table class="simple-table" *ngIf='properties?.length'>
-            <tr *ngFor='let row of properties' (click)='goToProp(row[0])'>
-                <td *ngFor='let cell of row'>{{ cell  || '-'  }}</td>
+    <div class="tokens-info-container" *ngIf="properties$ | async as properties; else loading">
+        <table class="simple-table"  *ngIf="properties.length; else noItems">
+            <tr *ngFor="let row of properties" (click)="goToProp(row[0])">
+                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
             </tr>
         </table>
     </div>
 </div>
+<ng-template #loading>Loading...</ng-template>
+<ng-template #noItems>No Items!</ng-template>
