@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TxService } from 'src/app/@core/services/tx.service';
 
@@ -6,7 +6,7 @@ import { TxService } from 'src/app/@core/services/tx.service';
   templateUrl: './tx-page.component.html',
   styleUrls: ['./tx-page.component.scss']
 })
-export class TxPageComponent {
+export class TxPageComponent implements OnInit{
   txLoading: boolean = false;
   txData: any = null;
 
@@ -14,7 +14,9 @@ export class TxPageComponent {
     private route: ActivatedRoute,
     private txService: TxService,
     private router: Router,
-  ) {
+  ) { }
+
+  ngOnInit(): void {
     this.getTxData();
   }
 

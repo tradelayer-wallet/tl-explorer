@@ -7,7 +7,7 @@ import { convertArrayToTable } from 'src/app/@utils/convert';
   templateUrl: './address-page.component.html',
   styleUrls: ['./address-page.component.scss']
 })
-export class AddressPageComponent {
+export class AddressPageComponent implements OnInit {
   balanceLoading: boolean = false;
   balanceData: any[] = [];
 
@@ -15,10 +15,12 @@ export class AddressPageComponent {
     private addressService: AddressService,
     private route: ActivatedRoute,
     private router: Router,
-  ) {
+  ) {}
+  
+  ngOnInit(): void {
     this.getAddressBalance();
   }
-
+  
   get address() {
     return this.route.snapshot.params?.['address'];
   }

@@ -6,7 +6,7 @@ import { PropertyService } from 'src/app/@core/services/propety.service';
   templateUrl: './property-page.component.html',
   styleUrls: ['./property-page.component.scss']
 })
-export class PropertyPageComponent {
+export class PropertyPageComponent implements OnInit {
   propLoading: boolean = false;
   propData: any = null;
 
@@ -14,7 +14,9 @@ export class PropertyPageComponent {
     private propertyService: PropertyService,
     private route: ActivatedRoute,
     private router: Router,
-  ) {
+  ) { }
+
+  ngOnInit(): void {
     this.getPropertyData();
   }
 

@@ -1,4 +1,4 @@
-import { Component, ɵɵsetComponentScope } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ChainService } from 'src/app/@core/services/chain.service';
 import { PropertyService } from 'src/app/@core/services/propety.service';
@@ -9,7 +9,7 @@ import { convertArrayToTable } from 'src/app/@utils/convert';
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.scss']
 })
-export class HomePageComponent {
+export class HomePageComponent implements OnInit {
   propertiesLoading: boolean = false;
   chainInfoLoading: boolean = false;
   chainInfo: any = null;
@@ -19,12 +19,14 @@ export class HomePageComponent {
     private propertyService: PropertyService,
     private chainService: ChainService,
     private router: Router,
-  ) {
+  ) {  }
+
+  ngOnInit(): void {
     this.getProperties();
     this.getMainData();
   }
 
-  async getProperties() {
+  getProperties() {
     this.propertiesLoading = true;
     this.propertyService.getProperties()
       .subscribe({

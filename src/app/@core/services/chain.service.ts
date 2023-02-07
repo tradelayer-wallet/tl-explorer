@@ -4,7 +4,6 @@ import { ApiService } from "./api.service";
 @Injectable({
     providedIn: 'root',
 })
-
 export class ChainService {
     constructor(
         private apiService: ApiService,
