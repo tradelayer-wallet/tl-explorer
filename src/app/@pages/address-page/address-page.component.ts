@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, Observable, of, map } from 'rxjs';
+import { catchError, Observable, of } from 'rxjs';
 import { AddressService } from 'src/app/@core/services/address.service';
-import { convertArrayToTable } from 'src/app/@utils/convert';
 
 @Component({
   templateUrl: './address-page.component.html',
@@ -32,7 +31,6 @@ export class AddressPageComponent implements OnInit {
     }
     return this.addressService.getBalance(address)
       .pipe(
-        map(convertArrayToTable),
         catchError(err => {
           console.log(err)
           this.router.navigate(['error']);

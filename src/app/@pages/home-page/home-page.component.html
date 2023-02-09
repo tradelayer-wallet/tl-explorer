@@ -9,8 +9,11 @@
     </div>
     <div class="tokens-info-container" *ngIf="properties$ | async as properties; else loading">
         <table class="simple-table"  *ngIf="properties.length; else noItems">
-            <tr *ngFor="let row of properties" (click)="goToProp(row[0])">
-                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
+            <tr>
+                <td *ngFor="let cell of properties | headers">{{ cell  || "-"  }}</td>
+            </tr>
+            <tr *ngFor="let row of properties | values" >
+                <td *ngFor="let cell of row" [routerLink]="['prop', row[0]]">{{ cell  || "-"  }}</td>
             </tr>
         </table>
     </div>

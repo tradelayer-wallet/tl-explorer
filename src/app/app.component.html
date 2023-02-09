@@ -1,15 +1,16 @@
 <div class="app-container">
     <div class="header">
-        <div class="left-side" (click)='navigateToHome()'>TradeLayer Explorer</div>
+        <div class="left-side" [routerLink]="['/']">
+            TradeLayer Explorer
+        </div>
         <div class="right-side">
             <input 
-                [disabled]='searchInProgress'
-                [(ngModel)]='searchValue'
-                class='search-box' 
+                [(ngModel)]="searchValue"
+                class="search-box" 
                 placeholder="Transaction or LTC address" 
-                (keydown.enter)='search()'
+                (keydown.enter)="search(searchValue)"
             >
-            <button (click)='search()' [disabled]='searchInProgress'>GO</button>
+            <button (click)="search(searchValue)">GO</button>
         </div>
     </div>
     <div class="content">

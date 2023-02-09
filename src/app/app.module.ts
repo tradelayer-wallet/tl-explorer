@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { NgModule } from '@angular/core';
+import { Directive, NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -11,6 +12,7 @@ import { AddressPageComponent } from './@pages/address-page/address-page.compone
 import { HomePageComponent } from './@pages/home-page/home-page.component';
 import { TxPageComponent } from './@pages/tx-page/tx-page.component';
 import { PropertyPageComponent } from './@pages/property-page/property-page.component';
+import { TableBodyPipe, TableHeadersPipe } from './@utils/pipes';
 
 const PAGE_COMPONENTS = [
     HomePageComponent,
@@ -19,10 +21,16 @@ const PAGE_COMPONENTS = [
     PropertyPageComponent,
 ];
 
+const DIRECTIVES = [
+  TableHeadersPipe,
+  TableBodyPipe
+]
+
 @NgModule({
   declarations: [
     AppComponent,
-    ...PAGE_COMPONENTS
+    ...PAGE_COMPONENTS,
+    ...DIRECTIVES
   ],
   imports: [
     BrowserModule,
@@ -34,4 +42,8 @@ const PAGE_COMPONENTS = [
   providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+  constructor(router: Router) {
+    router.routeReuseStrategy.shouldReuseRoute = () => false;
+  }
+}

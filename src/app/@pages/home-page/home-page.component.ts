@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { catchError, map, Observable, of, tap } from 'rxjs';
+import { catchError, Observable, of } from 'rxjs';
 import { ChainService } from 'src/app/@core/services/chain.service';
 import { PropertyService } from 'src/app/@core/services/propety.service';
-import { convertArrayToTable } from 'src/app/@utils/convert';
 
 
 @Component({
@@ -17,7 +15,6 @@ export class HomePageComponent implements OnInit {
   constructor(
     private propertyService: PropertyService,
     private chainService: ChainService,
-    private router: Router,
   ) {  }
 
   ngOnInit(): void {
@@ -28,7 +25,6 @@ export class HomePageComponent implements OnInit {
   getProperties(): Observable<any> {
     return this.propertyService.getProperties()
       .pipe(
-        map(convertArrayToTable),
         catchError((err) => {
           console.log(err);
           return of([]);
@@ -44,9 +40,5 @@ export class HomePageComponent implements OnInit {
           return of({});
         })
       );
-  }
-
-  goToProp(id: number) {
-    this.router.navigate(['prop', id.toString()]);
   }
 }

@@ -7,29 +7,16 @@ import { Router } from '@angular/router';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  private _searchValue: string = '';
-  searchInProgress: boolean = false;
+  searchValue: string = '';
 
   constructor(
     private router: Router,
-  ) {
-    this.router.routeReuseStrategy.shouldReuseRoute = () => false;
-  }
+  ) { }
 
-  get searchValue() {
-    return this._searchValue;
-  }
-
-  set searchValue(value: string) {
-    this._searchValue = value;
-  }
-
-  async search() {
-    if (!this.searchValue) {
+  search(value:string) {
+    if (!value) {
       return;
     }
-    this.searchInProgress = true;
-    const value = this.searchValue;
     this.searchValue = '';
 
     const routeArray = value.length === 64
@@ -38,10 +25,5 @@ export class AppComponent {
         ? ['address', value]
         : ['error'];
     this.router.navigate(routeArray);
-    this.searchInProgress = false;
-  }
-  
-  navigateToHome() {
-    this.router.navigate(['/']);
   }
 }
