@@ -25,6 +25,16 @@ export class TradeLayerApi {
         const path = '/token/list';
         return this.get(path);
     }
+    
+    getNatives(): Observable<any> {
+        const path = '/contract/natives';
+        return this.get(path);
+    }
+
+    getOracles(): Observable<any> {
+        const path = '/contract/oracles';
+        return this.get(path);
+    }
 
     getChainInfo(): Observable<any>  {
         const path = '/chain/info';

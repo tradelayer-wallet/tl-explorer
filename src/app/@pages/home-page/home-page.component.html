@@ -1,14 +1,17 @@
 <div class="home-container page">
     <div class="main-info-container" *ngIf="mainChainInfo$ | async as mainChainInfo; else loading">
-        <table class="simple-table" *ngIf="mainChainInfo; else noItems">
+        <h3 *ngIf="mainChainInfo">Chain info</h3>
+        <table class="simple-table" *ngIf="mainChainInfo; else noChainInfo">
             <tr *ngFor="let row of mainChainInfo | keyvalue">
                 <td>{{ row.key }}</td>
                 <td>{{ row.value || "-"  }}</td>
             </tr>
         </table>
     </div>
-    <div class="tokens-info-container" *ngIf="properties$ | async as properties; else loading">
-        <table class="simple-table"  *ngIf="properties.length; else noItems">
+
+    <div class="tokens info-container" *ngIf="properties$ | async as properties; else loading">
+        <h3 *ngIf="properties.length">Properties</h3>
+        <table class="simple-table"  *ngIf="properties.length; else noProperties">
             <tr>
                 <td *ngFor="let cell of properties | headers">{{ cell  || "-"  }}</td>
             </tr>
@@ -17,6 +20,33 @@
             </tr>
         </table>
     </div>
+
+    <div class="info-container" *ngIf="oracles$ | async as oracles; else loading">
+        <h3 *ngIf="oracles.length">Oracle Contracts</h3>
+        <table class="simple-table"  *ngIf="oracles.length; else noOracles">
+            <tr>
+                <td *ngFor="let cell of oracles | headers">{{ cell  || "-"  }}</td>
+            </tr>
+            <tr *ngFor="let row of oracles | values" >
+                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="info-container" *ngIf="natives$ | async as natives; else loading">
+        <h3 *ngIf="natives.length">Native Contracts</h3>
+        <table class="simple-table"  *ngIf="natives.length; else noNatives">
+            <tr>
+                <td *ngFor="let cell of natives | headers">{{ cell  || "-"  }}</td>
+            </tr>
+            <tr *ngFor="let row of natives | values" >
+                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
+            </tr>
+        </table>
+    </div>
 </div>
 <ng-template #loading>Loading...</ng-template>
-<ng-template #noItems>No Items!</ng-template>
+<ng-template #noNatives>No native contracts</ng-template>
+<ng-template #noOracles>No oracle ontracts</ng-template>
+<ng-template #noChainInfo>The chain info is empty</ng-template>
+<ng-template #noProperties>No properties</ng-template>
