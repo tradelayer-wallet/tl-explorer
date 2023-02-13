@@ -14,11 +14,27 @@ export class ContractService {
         return this.apiService.tlApi;
     }
 
+    getContract(id: number) {
+        return this.tlApi.getContract(id);
+    }
+
+    getOpenInterest(id: number) {
+        return this.tlApi.getContractOpenInterest(id); 
+    }
+
+    getTradeHistory(id: number) {
+        return this.tlApi.getContractTradeHistory(id); 
+    }
+
+    getTradeHistoryUnfiltered(id: number) {
+        return this.tlApi.getContractTradeHistoryUnfiltered(id); 
+    }
+
     getNatives() {
-        return this.tlApi.getNatives();
+        return this.tlApi.getNativeContracts();
     }
 
     getOracles() {
-        return this.tlApi.getOracles();
+        return this.tlApi.getOracleContracts();
     }
 }

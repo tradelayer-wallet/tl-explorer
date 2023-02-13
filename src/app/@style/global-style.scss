@@ -33,6 +33,7 @@
 
 .simple-table {
     width: 100%;
+
     border-collapse: collapse;
     tr {
         background-color: var(--hardGrey);
@@ -69,4 +70,9 @@
     width: 100%;
     padding: 2rem;
     align-items: center;
+}
+
+.info-container {
+    max-width: 90%;
+    overflow-x: auto;
 }

@@ -2,7 +2,10 @@
     width: 30%;
 }
 
-.tokens {
+.info-container{
+    margin-top: 3rem;
+    max-width: 90%;
+
     tr {
         cursor: pointer;
         &:hover {
@@ -12,9 +15,4 @@
             }
         }
     }
-}
-.info-container {
-    margin-top: 3rem;
-    max-width: 90%;
-    overflow-x: auto;
 }

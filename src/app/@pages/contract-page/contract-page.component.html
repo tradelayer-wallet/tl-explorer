@@ -1,0 +1,46 @@
+<div class="page contract-page-container">
+  <div class="contract info-container" *ngIf="contract$ | async as contract; else loading">
+      <h3 *ngIf="contract">Contract</h3>
+      <table class="simple-table"  >
+          <tr *ngFor="let row of contract | keyvalue">
+              <td>{{ row.key }}</td>
+              <td>{{ row.value }}</td>
+          </tr>
+      </table>
+  </div>
+  <div class="contract-info-container" *ngIf="openInterest$ | async as openInterest; else loading">
+    <h3 *ngIf="openInterest">Interest Data</h3>
+    <table class="simple-table"  *ngIf="openInterest">
+        <tr *ngFor="let row of openInterest | keyvalue">
+            <td>{{ row.key }}</td>
+            <td>{{ row.value  }}</td>
+        </tr>
+    </table>
+  </div>
+  <div class="contract info-container" *ngIf="tradeHistory$ | async as tradeHistory; else loading">
+    <h3 *ngIf="tradeHistory.length"> Trade History </h3>
+    <table class="simple-table"  *ngIf="tradeHistory.length; else noTradeHistory">
+        <tr>
+            <td *ngFor="let cell of tradeHistory | headers">{{ cell  || "-"  }}</td>
+        </tr>
+        <tr *ngFor="let row of tradeHistory | values">
+            <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
+        </tr>
+    </table>
+  </div>
+  <div class="contract info-container" *ngIf="tradeHistoryUnfiltered$ | async as tradeHistoryUnfiltered; else loading">
+    <h3 *ngIf="tradeHistoryUnfiltered.length"> Unfiltered Trade History </h3>
+    <table class="simple-table"  *ngIf="tradeHistoryUnfiltered.length; else noTradeHistoryUnfiltered">
+        <tr>
+            <td *ngFor="let cell of tradeHistoryUnfiltered | headers">{{ cell  || "-"  }}</td>
+        </tr>
+        <tr *ngFor="let row of tradeHistoryUnfiltered | values">
+            <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
+        </tr>
+    </table>
+  </div>
+</div>
+<ng-template #loading>Loading...</ng-template>
+<ng-template #noData>No data!</ng-template>
+<ng-template #noTradeHistory>No Trade History Data</ng-template>
+<ng-template #noTradeHistoryUnfiltered>No Unfiltered Trade History Data</ng-template>

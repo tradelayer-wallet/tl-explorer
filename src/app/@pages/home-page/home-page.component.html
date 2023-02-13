@@ -15,8 +15,8 @@
             <tr>
                 <td *ngFor="let cell of properties | headers">{{ cell  || "-"  }}</td>
             </tr>
-            <tr *ngFor="let row of properties | values" >
-                <td *ngFor="let cell of row" [routerLink]="['prop', row[0]]">{{ cell  || "-"  }}</td>
+            <tr *ngFor="let row of properties | values" [routerLink]="['prop', row[0]]">
+                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
             </tr>
         </table>
     </div>
@@ -27,7 +27,7 @@
             <tr>
                 <td *ngFor="let cell of oracles | headers">{{ cell  || "-"  }}</td>
             </tr>
-            <tr *ngFor="let row of oracles | values" >
+            <tr *ngFor="let row of oracles | values"  [routerLink]="['contracts', row[0]]">
                 <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
             </tr>
         </table>
@@ -39,7 +39,7 @@
             <tr>
                 <td *ngFor="let cell of natives | headers">{{ cell  || "-"  }}</td>
             </tr>
-            <tr *ngFor="let row of natives | values" >
+            <tr *ngFor="let row of natives | values" [routerLink]="['contracts', row[0]]">
                 <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
             </tr>
         </table>

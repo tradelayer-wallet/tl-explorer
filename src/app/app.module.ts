@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { Directive, NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { Router } from '@angular/router';
@@ -13,10 +13,12 @@ import { HomePageComponent } from './@pages/home-page/home-page.component';
 import { TxPageComponent } from './@pages/tx-page/tx-page.component';
 import { PropertyPageComponent } from './@pages/property-page/property-page.component';
 import { TableBodyPipe, TableHeadersPipe } from './@utils/pipes';
+import { ContractPageComponent } from './@pages/contract-page/contract-page.component';
 
 const PAGE_COMPONENTS = [
     HomePageComponent,
     AddressPageComponent,
+    ContractPageComponent,
     TxPageComponent,
     PropertyPageComponent,
 ];

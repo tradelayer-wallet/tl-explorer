@@ -25,14 +25,32 @@ export class TradeLayerApi {
         const path = '/token/list';
         return this.get(path);
     }
-    
-    getNatives(): Observable<any> {
-        const path = '/contract/natives';
+
+    getContract(id: number): Observable<any> {
+        const path = `/contracts/${id}`;
         return this.get(path);
     }
 
-    getOracles(): Observable<any> {
-        const path = '/contract/oracles';
+    getContractOpenInterest(id: number): Observable<any> {
+        const path = `/contracts/${id}/open_interest`;
+        return this.get(path);
+    }
+    getContractTradeHistory(id: number): Observable<any> {
+        const path = `/contracts/${id}/trade_history`;
+        return this.get(path);
+    }
+    getContractTradeHistoryUnfiltered(id: number): Observable<any> {
+        const path = `/contracts/${id}/trade_history_unfiltered`;
+        return this.get(path);
+    }
+    
+    getNativeContracts(): Observable<any> {
+        const path = '/contracts/natives';
+        return this.get(path);
+    }
+
+    getOracleContracts(): Observable<any> {
+        const path = '/contracts/oracles';
         return this.get(path);
     }
 
