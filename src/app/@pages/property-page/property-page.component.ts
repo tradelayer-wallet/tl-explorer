@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, map, Observable, of } from 'rxjs';
+import { catchError, Observable, of } from 'rxjs';
 import { PropertyService } from 'src/app/@core/services/propety.service';
 
 @Component({
@@ -9,6 +9,7 @@ import { PropertyService } from 'src/app/@core/services/propety.service';
 })
 export class PropertyPageComponent implements OnInit {
   propData$: Observable<any> = of(null);
+  propCurrencyTotal$: Observable<any> = of(null);
 
   constructor(
     private propertyService: PropertyService,
@@ -17,11 +18,12 @@ export class PropertyPageComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.propData$ = this.getPropertyData();
+    const propertyId = parseFloat(this.route.snapshot.params?.['propertyId']);
+    this.propData$ = this.getPropertyData(propertyId);
+    this.propCurrencyTotal$ = this.propertyService.getPropCurrencyTotal(propertyId);
   }
 
-  private getPropertyData() {
-    const propId = parseFloat(this.route.snapshot.params?.['id']) || null;
+  private getPropertyData(propId: number | null) {
     if (!propId) {
       return of(null);
     }

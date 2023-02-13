@@ -1,7 +1,17 @@
 <div class="page property-page-container">
     <div class="prop-info-container" *ngIf="propData$ | async as propData; else loading">
-        <table class="simple-table"  >
+        <h3>Property:</h3>
+        <table class="simple-table" >
             <tr *ngFor="let row of propData | keyvalue">
+                <td>{{ row.key }}</td>
+                <td>{{ row.value || "-" }}</td>
+            </tr>
+        </table>
+    </div>
+    <div class="prop-info-container" *ngIf="propCurrencyTotal$ | async as propCurrencyTotal; else loading">
+        <h3>Currency:</h3>
+        <table class="simple-table">
+            <tr *ngFor="let row of propCurrencyTotal | keyvalue">
                 <td>{{ row.key }}</td>
                 <td>{{ row.value || "-" }}</td>
             </tr>

@@ -21,4 +21,8 @@ export class PropertyService {
     getPropData(id: number) {
         return this.tlApi.getPropData(id);
     }
+
+    getPropCurrencyTotal(id: number) {
+        return this.tlApi.getPropCurrencyTotal(id);
+    }
 }

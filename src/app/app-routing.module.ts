@@ -21,7 +21,7 @@ const routes: Routes = [
     component: TxPageComponent,
   },
   {
-    path:'prop/:id',
+    path:'properties/:propertyId',
     component: PropertyPageComponent,
   },
   {

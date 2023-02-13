@@ -15,7 +15,7 @@
             <tr>
                 <td *ngFor="let cell of properties | headers">{{ cell  || "-"  }}</td>
             </tr>
-            <tr *ngFor="let row of properties | values" [routerLink]="['prop', row[0]]">
+            <tr *ngFor="let row of properties | values" [routerLink]="['properties', row[0]]">
                 <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
             </tr>
         </table>

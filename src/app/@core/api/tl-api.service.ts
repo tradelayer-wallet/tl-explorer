@@ -22,7 +22,17 @@ export class TradeLayerApi {
     }
 
     getProperties(): Observable<any> {
-        const path = '/token/list';
+        const path = '/tokens';
+        return this.get(path);
+    }
+
+    getPropData(id: number): Observable<any>  {
+        const path = `/tokens/${id}`;
+        return this.get(path);
+    }
+
+    getPropCurrencyTotal(id: number): Observable<any>  {
+        const path = `/tokens/${id}/currency_total`;
         return this.get(path);
     }
 
@@ -56,11 +66,6 @@ export class TradeLayerApi {
 
     getChainInfo(): Observable<any>  {
         const path = '/chain/info';
-        return this.get(path);
-    }
-
-    getPropData(id: number): Observable<any>  {
-        const path = `/token/${id}`;
         return this.get(path);
     }
 
