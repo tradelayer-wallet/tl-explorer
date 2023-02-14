@@ -1,14 +1,23 @@
 import { Injectable } from "@angular/core";
 import { environment } from "src/environments/environment";
 import { HttpClient } from "@angular/common/http";
-import { map, Observable } from "rxjs";
+import { catchError, map, Observable } from "rxjs";
+import { Router } from "@angular/router";
+
+export enum PropertyCacheType {
+    NativeFees = 0,
+    OracleFees = 1,
+    SpotFees = 2,
+    Total
+};
 
 @Injectable({
     providedIn: 'root',
 })
 export class TradeLayerApi {
     constructor(
-        private http: HttpClient
+        private http: HttpClient,
+        private router: Router,
     ) {}
 
     validateAddress(address: string): Observable<any> {
@@ -33,6 +42,16 @@ export class TradeLayerApi {
 
     getPropCurrencyTotal(id: number): Observable<any>  {
         const path = `/tokens/${id}/currency_total`;
+        return this.get(path);
+    }
+
+    getPropCache(id: number, cacheType: PropertyCacheType = PropertyCacheType.Total): Observable<any>  {
+        const path = `/tokens/${id}/cache?cacheType=${cacheType}`;
+        return this.get(path);
+    }
+
+    getPropLtcVolume(id: number, startBlock: number, endBlock: number): Observable<any>  {
+        const path = `/tokens/${id}/ltc_volume?startBlock=${startBlock}&endBlock=${endBlock}`;
         return this.get(path);
     }
 
@@ -87,6 +106,10 @@ export class TradeLayerApi {
                         throw res.error;
                     }
                     return res.data;
+                }),
+                catchError((error) => {
+                    return this.router.navigate(['error'], {
+                        queryParams: { message: error.message }});
                 })
             );
     }

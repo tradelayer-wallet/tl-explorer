@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, map, Observable, of } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { Observable, of } from 'rxjs';
 import { TxService } from 'src/app/@core/services/tx.service';
 
 @Component({
@@ -13,23 +13,14 @@ export class TxPageComponent implements OnInit{
   constructor(
     private route: ActivatedRoute,
     private txService: TxService,
-    private router: Router,
   ) { }
 
   ngOnInit(): void {
-    this.txData$ = this.getTxData();
-  }
-
-  private getTxData():Observable<any> {
     const txId = this.route.snapshot.params?.['txid'] || null;
     if (!txId) {
-      return of(null);
+      this.txData$ =  of(null);
+      return;
     }
-    return this.txService.getTxData(txId)
-      .pipe(
-        catchError(() => {
-          return this.router.navigate(['error']);
-        })
-      );
+    this.txData$ = this.txService.getTxData(txId)
   }
 }

@@ -17,6 +17,24 @@
             </tr>
         </table>
     </div>
+    <div class="prop-info-container" *ngIf="ltcVolume$ | async as ltcVolume$; else loading">
+        <h3>Ltc Volume:</h3>
+        <table class="simple-table">
+            <tr *ngFor="let row of ltcVolume$ | keyvalue">
+                <td>{{ row.key }}</td>
+                <td>{{ row.value || "-" }}</td>
+            </tr>
+        </table>
+    </div>
+    <div class="prop-info-container" *ngIf="propCache$ | async as propCache$; else loading">
+        <h3>Cache:</h3>
+        <table class="simple-table">
+            <tr *ngFor="let row of propCache$ | keyvalue">
+                <td>{{ row.key }}</td>
+                <td>{{ row.value || "-" }}</td>
+            </tr>
+        </table>
+    </div>
 </div>
 <ng-template #loading>Loading...</ng-template>
 <ng-template #noData>No data!</ng-template>

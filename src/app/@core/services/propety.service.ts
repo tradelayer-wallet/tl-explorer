@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { PropertyCacheType } from "../api/tl-api.service";
 import { ApiService } from "./api.service";
 
 @Injectable({
@@ -24,5 +25,12 @@ export class PropertyService {
 
     getPropCurrencyTotal(id: number) {
         return this.tlApi.getPropCurrencyTotal(id);
+    }
+    getPropCache(id: number, cacheType: PropertyCacheType = PropertyCacheType.Total) {
+        return this.tlApi.getPropCache(id, cacheType);
+    }
+
+    getPropLtcVolume(id: number, startBlock: number, endBlock: number) {
+        return this.tlApi.getPropLtcVolume(id, startBlock, endBlock);
     }
 }
