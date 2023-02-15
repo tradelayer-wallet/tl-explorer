@@ -21,12 +21,17 @@ export class TradeLayerApi {
     ) {}
 
     validateAddress(address: string): Observable<any> {
-        const path = `/address/validate/${address}`;
+        const path = `/addresses/${address}/validate/`;
         return this.get(path);
     }
 
     getBalance(address: string): Observable<any> {
-        const path = `/address/balance/${address}`;
+        const path = `/addresses/${address}/balance`;
+        return this.get(path);
+    }
+
+    getUnvestedBalance(address: string): Observable<any> {
+        const path = `/addresses/${address}/unvested_balance`;
         return this.get(path);
     }
 
@@ -47,6 +52,11 @@ export class TradeLayerApi {
 
     getPropCache(id: number, cacheType: PropertyCacheType = PropertyCacheType.Total): Observable<any>  {
         const path = `/tokens/${id}/cache?cacheType=${cacheType}`;
+        return this.get(path);
+    }
+
+    getPropVestingInfo(id: number) {
+        const path = `/tokens/${id}/vesting_info`;
         return this.get(path);
     }
 
@@ -107,9 +117,10 @@ export class TradeLayerApi {
                     }
                     return res.data;
                 }),
-                catchError((error) => {
+                catchError((message) => {
+                    console.error(message);
                     return this.router.navigate(['error'], {
-                        queryParams: { message: error.message }});
+                        queryParams: { message }});
                 })
             );
     }

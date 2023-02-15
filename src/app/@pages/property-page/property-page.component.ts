@@ -16,6 +16,7 @@ export class PropertyPageComponent implements OnInit {
   public propCurrencyTotal$: Observable<any> = of(null);
   public ltcVolume$: Observable<any> = of(null);
   public propCache$: Observable<any> = of(null);
+  public vestingInfo$: Observable<any> = of(null);
 
   constructor(
     private propertyService: PropertyService,
@@ -41,6 +42,11 @@ export class PropertyPageComponent implements OnInit {
       .pipe(
         mergeMap(() => {
           return this.propertyService.getPropCache(propertyId, PropertyCacheType.Total);
+        }));
+    this.vestingInfo$ = this.propData$
+      .pipe(
+        mergeMap(() => {
+          return this.propertyService.getPropVestingInfo(propertyId);
         }));
   }
 }

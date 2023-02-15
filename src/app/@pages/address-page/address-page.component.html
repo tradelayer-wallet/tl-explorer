@@ -14,6 +14,15 @@
             </tr>
         </table>
     </div>
+    <div class="balance-container" *ngIf="unvestedBalance$ | async as unvestedBalance; else loading">
+        <h3 *ngIf="unvestedBalance">Unvested Balance</h3>
+        <table class="simple-table"  *ngIf="unvestedBalance">
+            <tr *ngFor="let row of unvestedBalance | keyvalue">
+                <td>{{ row.key }}</td>
+                <td>{{ row.value  }}</td>
+            </tr>
+        </table>
+      </div>
 </div>
 <ng-template #loading>Loading...</ng-template>
 <ng-template #noData>No data!</ng-template>

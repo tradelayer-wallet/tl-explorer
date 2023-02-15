@@ -26,8 +26,13 @@ export class PropertyService {
     getPropCurrencyTotal(id: number) {
         return this.tlApi.getPropCurrencyTotal(id);
     }
+
     getPropCache(id: number, cacheType: PropertyCacheType = PropertyCacheType.Total) {
         return this.tlApi.getPropCache(id, cacheType);
+    }
+
+    getPropVestingInfo(id: number) {
+        return this.tlApi.getPropVestingInfo(id);
     }
 
     getPropLtcVolume(id: number, startBlock: number, endBlock: number) {

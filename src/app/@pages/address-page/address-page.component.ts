@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, Observable, of } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { Observable, of } from 'rxjs';
 import { AddressService } from 'src/app/@core/services/address.service';
 
 @Component({
@@ -9,33 +9,22 @@ import { AddressService } from 'src/app/@core/services/address.service';
 })
 export class AddressPageComponent implements OnInit {
   balanceData$: Observable<any[]> = of([]);
+  unvestedBalance$: Observable<any> = of({});
 
   constructor(
     private addressService: AddressService,
     private route: ActivatedRoute,
-    private router: Router,
   ) {}
   
   ngOnInit(): void {
-    this.balanceData$ = this.getAddressBalance();
+    if (!this.address) {
+      return;
+    }
+    this.balanceData$ = this.addressService.getBalance(this.address);
+    this.unvestedBalance$ = this.addressService.getUnvestedBalance(this.address);
   }
   
   get address() {
-    return this.route.snapshot.params?.['address'];
-  }
-
-  getAddressBalance() {
-    const address = this.address || null;
-    if (!address) {
-      return of([]);
-    }
-    return this.addressService.getBalance(address)
-      .pipe(
-        catchError(err => {
-          console.log(err)
-          this.router.navigate(['error']);
-          return of([]);
-        })
-      )
+    return this.route.snapshot.params?.['address'] || null;
   }
 }

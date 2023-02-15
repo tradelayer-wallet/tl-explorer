@@ -20,4 +20,8 @@ export class AddressService {
     getBalance(address: string) {
         return this.tlApi.getBalance(address);
     }
+
+    getUnvestedBalance(address: string) {
+        return this.tlApi.getUnvestedBalance(address);
+    }
 }
