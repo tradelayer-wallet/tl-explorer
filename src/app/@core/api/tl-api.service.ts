@@ -93,8 +93,23 @@ export class TradeLayerApi {
         return this.get(path);
     }
 
-    getChainInfo(): Observable<any>  {
+    getChainInfo(): Observable<any> {
         const path = '/chain/info';
+        return this.get(path);
+    }
+
+    getNextReward(): Observable<any> {
+        const path = '/chain/next_reward';
+        return this.get(path);
+    }
+
+    listNodeRewardAddresses(): Observable<any> {
+        const path = '/chain/node_reward_addresses';
+        return this.get(path);
+    }
+
+    getLastWinners(): Observable<any> {
+        const path = '/chain/last_winners';
         return this.get(path);
     }
 

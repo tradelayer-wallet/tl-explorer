@@ -16,4 +16,16 @@ export class ChainService {
     getChainInfo() {
         return this.tlApi.getChainInfo();
     }
+
+    getNextReward() {
+        return this.tlApi.getNextReward();
+    }
+
+    listNodeRewardAddresses() {
+        return this.tlApi.listNodeRewardAddresses();
+    }
+
+    getLastWinners() {
+        return this.tlApi.getLastWinners();
+    }
 }
