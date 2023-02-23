@@ -14,11 +14,13 @@ import { TxPageComponent } from './@pages/tx-page/tx-page.component';
 import { PropertyPageComponent } from './@pages/property-page/property-page.component';
 import { TableBodyPipe, TableHeadersPipe } from './@utils/pipes';
 import { ContractPageComponent } from './@pages/contract-page/contract-page.component';
+import { LastWinnersPageComponent } from './@pages/last-winners/last-winners-page.component';
 
 const PAGE_COMPONENTS = [
     HomePageComponent,
     AddressPageComponent,
     ContractPageComponent,
+    LastWinnersPageComponent,
     TxPageComponent,
     PropertyPageComponent,
 ];
@@ -32,7 +34,7 @@ const DIRECTIVES = [
   declarations: [
     AppComponent,
     ...PAGE_COMPONENTS,
-    ...DIRECTIVES
+    ...DIRECTIVES,
   ],
   imports: [
     BrowserModule,

@@ -132,8 +132,8 @@ export class TradeLayerApi {
                     }
                     return res.data;
                 }),
-                catchError((message) => {
-                    console.error(message);
+                catchError((error) => {
+                    const message = error?.message || error;
                     return this.router.navigate(['error'], {
                         queryParams: { message }});
                 })

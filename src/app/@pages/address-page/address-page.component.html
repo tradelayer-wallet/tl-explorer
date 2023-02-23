@@ -2,6 +2,9 @@
     <div class="title">
         {{ address }}
     </div>
+    <div class="balance-container title" *ngIf="isWinningAddress$ | async as isWinningAddress">
+        <h3 *ngIf="isWinningAddress">This is a winning Address!</h3>
+    </div>
     <div class="balance-container"  *ngIf="balanceData$ | async as balanceData; else loading">
         <table class="simple-table" *ngIf="balanceData.length; else noData">
             <tr>

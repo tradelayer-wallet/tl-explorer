@@ -1,4 +1,8 @@
 <div class="home-container page">
+    <div class="main-info-container" *ngIf="nextReward$ | async as nextReward">
+        <h3 *ngIf="nextReward">Next Reward: {{ nextReward }} </h3>
+    </div>
+
     <div class="main-info-container" *ngIf="mainChainInfo$ | async as mainChainInfo; else loading">
         <h3 *ngIf="mainChainInfo">Chain info</h3>
         <table class="simple-table" *ngIf="mainChainInfo; else noChainInfo">

@@ -4,7 +4,6 @@ import { ChainService } from 'src/app/@core/services/chain.service';
 import { ContractService } from 'src/app/@core/services/contract.service';
 import { PropertyService } from 'src/app/@core/services/propety.service';
 
-
 @Component({
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.scss']
@@ -14,6 +13,7 @@ export class HomePageComponent implements OnInit {
   properties$: Observable<any> = of();
   natives$: Observable<any> = of();
   oracles$: Observable<any> = of();
+  nextReward$: Observable<any> = of([]);
 
   constructor(
     private propertyService: PropertyService,
@@ -26,6 +26,7 @@ export class HomePageComponent implements OnInit {
     this.mainChainInfo$ = this.getMainData();
     this.natives$ = this.contractService.getNatives();
     this.oracles$ = this.contractService.getOracles();
+    this.nextReward$ = this.chainService.getNextReward();
   }
 
   getProperties(): Observable<any> {

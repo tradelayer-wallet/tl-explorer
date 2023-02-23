@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 import { AddressService } from 'src/app/@core/services/address.service';
+import { ChainService } from 'src/app/@core/services/chain.service';
 
 @Component({
   templateUrl: './address-page.component.html',
@@ -10,9 +11,11 @@ import { AddressService } from 'src/app/@core/services/address.service';
 export class AddressPageComponent implements OnInit {
   balanceData$: Observable<any[]> = of([]);
   unvestedBalance$: Observable<any> = of({});
+  isWinningAddress$: Observable<boolean> = of(false);
 
   constructor(
     private addressService: AddressService,
+    private chainService: ChainService,
     private route: ActivatedRoute,
   ) {}
   
@@ -22,8 +25,12 @@ export class AddressPageComponent implements OnInit {
     }
     this.balanceData$ = this.addressService.getBalance(this.address);
     this.unvestedBalance$ = this.addressService.getUnvestedBalance(this.address);
+    this.isWinningAddress$ = this.chainService.listNodeRewardAddresses()
+      .pipe(
+        map((addresses: Array<string>) => addresses.includes(this.address))
+      );
   }
-  
+
   get address() {
     return this.route.snapshot.params?.['address'] || null;
   }
