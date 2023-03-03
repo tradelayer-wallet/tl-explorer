@@ -1,5 +1,6 @@
 <div class="page last-winners-page-container">
   <div class="balance-container"  *ngIf="lastWinners$ | async as lastWinners; else loading">
+      <h2>Last Winners</h2>
       <table class="simple-table" *ngIf="lastWinners.length; else noData">
           <tr *ngFor="let row of lastWinners">
               <td>{{ row  || "-"  }}</td>
@@ -8,4 +9,4 @@
   </div>
 </div>
 <ng-template #loading>Loading...</ng-template>
-<ng-template #noData>No data!</ng-template>
+<ng-template #noData>No previous winners!</ng-template>

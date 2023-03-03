@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { map } from "rxjs";
 import { ApiService } from "./api.service";
 
 @Injectable({
@@ -26,6 +27,9 @@ export class ChainService {
     }
 
     getLastWinners() {
-        return this.tlApi.getLastWinners();
+        return this.tlApi.getLastWinners()
+            .pipe(
+                map(collection => collection.slice(1))
+            );
     }
 }

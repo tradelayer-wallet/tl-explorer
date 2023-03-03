@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { map, Observable, of } from 'rxjs';
+import { map, Observable, of, tap } from 'rxjs';
 import { AddressService } from 'src/app/@core/services/address.service';
 import { ChainService } from 'src/app/@core/services/chain.service';
 

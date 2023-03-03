@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { catchError, Observable, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { ChainService } from 'src/app/@core/services/chain.service';
 import { ContractService } from 'src/app/@core/services/contract.service';
 import { PropertyService } from 'src/app/@core/services/propety.service';
@@ -22,30 +22,10 @@ export class HomePageComponent implements OnInit {
   ) {  }
 
   ngOnInit(): void {
-    this.properties$ = this.getProperties();
-    this.mainChainInfo$ = this.getMainData();
+    this.properties$ = this.propertyService.getProperties();
+    this.mainChainInfo$ = this.chainService.getChainInfo();
     this.natives$ = this.contractService.getNatives();
     this.oracles$ = this.contractService.getOracles();
     this.nextReward$ = this.chainService.getNextReward();
-  }
-
-  getProperties(): Observable<any> {
-    return this.propertyService.getProperties()
-      .pipe(
-        catchError((err) => {
-          console.log(err);
-          return of([]);
-        })
-      );
-  }
-
-  getMainData() {
-    return this.chainService.getChainInfo()
-      .pipe(
-        catchError((error) => {
-          console.log(error)
-          return of({});
-        })
-      );
   }
 }
