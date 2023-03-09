@@ -15,6 +15,11 @@ import { PropertyPageComponent } from './@pages/property-page/property-page.comp
 import { TableBodyPipe, TableHeadersPipe } from './@utils/pipes';
 import { ContractPageComponent } from './@pages/contract-page/contract-page.component';
 import { LastWinnersPageComponent } from './@pages/last-winners/last-winners-page.component';
+import { PossibleLinkComponent } from './@components/possible-link/possible-link.component';
+
+const CUSTOM_COMPONENTS = [
+  PossibleLinkComponent,
+]
 
 const PAGE_COMPONENTS = [
     HomePageComponent,
@@ -33,6 +38,7 @@ const DIRECTIVES = [
 @NgModule({
   declarations: [
     AppComponent,
+    ...CUSTOM_COMPONENTS,
     ...PAGE_COMPONENTS,
     ...DIRECTIVES,
   ],

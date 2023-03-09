@@ -4,7 +4,7 @@
         <table class="simple-table" >
             <tr *ngFor="let row of propData | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || "-" }}</td>
+                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
             </tr>
         </table>
     </div>
@@ -13,7 +13,7 @@
         <table class="simple-table">
             <tr *ngFor="let row of propCurrencyTotal | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || "-" }}</td>
+                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
             </tr>
         </table>
     </div>
@@ -22,7 +22,7 @@
         <table class="simple-table">
             <tr *ngFor="let row of ltcVolume | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || "-" }}</td>
+                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
             </tr>
         </table>
     </div>
@@ -31,7 +31,7 @@
         <table class="simple-table">
             <tr *ngFor="let row of propCache | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || "-" }}</td>
+                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
             </tr>
         </table>
     </div>
@@ -40,7 +40,7 @@
         <table class="simple-table">
             <tr *ngFor="let row of vestingInfo | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || "-" }}</td>
+                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
             </tr>
         </table>
     </div>

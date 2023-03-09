@@ -10,10 +10,10 @@ export class TableHeadersPipe implements PipeTransform {
 }
 
 @Pipe({
-  name: 'values'
+  name: 'entries'
 })
 export class TableBodyPipe implements PipeTransform {
-  transform(data: any[][]): string[][] {
-    return data.map(entry => Object.values(entry));
+  transform(data: any[][]): string[][][] {
+    return data.map(entry => Object.entries(entry));
   }
 }

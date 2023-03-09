@@ -8,7 +8,7 @@
         <table class="simple-table" *ngIf="mainChainInfo; else noChainInfo">
             <tr *ngFor="let row of mainChainInfo | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || "-"  }}</td>
+                 <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
             </tr>
         </table>
     </div>
@@ -19,8 +19,10 @@
             <tr>
                 <td *ngFor="let cell of properties | headers">{{ cell  || "-"  }}</td>
             </tr>
-            <tr *ngFor="let row of properties | values" [routerLink]="['properties', row[0]]">
-                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
+            <tr *ngFor="let row of properties | entries" [routerLink]="['properties', row[0][1]]">
+                <td *ngFor="let cell of row">
+                    <tl-possible-link [key]="cell[0]" [value]="cell[1]"></tl-possible-link>
+                </td>
             </tr>
         </table>
     </div>
@@ -31,8 +33,10 @@
             <tr>
                 <td *ngFor="let cell of oracles | headers">{{ cell  || "-"  }}</td>
             </tr>
-            <tr *ngFor="let row of oracles | values"  [routerLink]="['contracts', row[0]]">
-                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
+            <tr *ngFor="let row of oracles | entries"  [routerLink]="['contracts', row[0][1]]">
+                <td *ngFor="let cell of row">
+                    <tl-possible-link [key]="cell[0]" [value]="cell[1]"></tl-possible-link>
+                </td>
             </tr>
         </table>
     </div>
@@ -43,8 +47,10 @@
             <tr>
                 <td *ngFor="let cell of natives | headers">{{ cell  || "-"  }}</td>
             </tr>
-            <tr *ngFor="let row of natives | values" [routerLink]="['contracts', row[0]]">
-                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
+            <tr *ngFor="let row of natives | entries" [routerLink]="['contracts', row[0][1]]">
+                <td *ngFor="let cell of row">
+                    <tl-possible-link [key]="cell[0]" [value]="cell[1]"></tl-possible-link>
+                </td>
             </tr>
         </table>
     </div>

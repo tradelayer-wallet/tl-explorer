@@ -14,7 +14,7 @@ const routes: Routes = [
     component: HomePageComponent,
   },
   {
-    path:'address/:address',
+    path:'addresses/:address',
     component: AddressPageComponent,
   },
   {

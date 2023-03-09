@@ -12,8 +12,10 @@
                     {{ headerCell  || "-"  }}
                 </td>
             </tr>
-            <tr *ngFor="let row of balanceData | values">
-                <td *ngFor="let cell of row">{{ cell  || "-"  }}</td>
+            <tr *ngFor="let row of balanceData | entries">
+                <td *ngFor="let cell of row">
+                    <tl-possible-link [key]="cell[0]" [value]="cell[1]"></tl-possible-link>
+                </td>
             </tr>
         </table>
     </div>
@@ -22,7 +24,7 @@
         <table class="simple-table"  *ngIf="unvestedBalance">
             <tr *ngFor="let row of unvestedBalance | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value  }}</td>
+                 <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
             </tr>
         </table>
       </div>

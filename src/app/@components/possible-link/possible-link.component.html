@@ -1,0 +1,13 @@
+<p *ngIf="link.length">
+  <a [routerLink]="link">
+    {{ value || '-' }}
+  </a>
+</p>
+<p *ngIf="isExternal">
+  <a target="_blank" href="{{value.startsWith('http') ? value : 'https://'+value}}">
+    {{ value || '-' }}
+  </a>
+</p>
+<p *ngIf="!link.length && !isExternal">
+  {{ value || '-'}}
+</p>

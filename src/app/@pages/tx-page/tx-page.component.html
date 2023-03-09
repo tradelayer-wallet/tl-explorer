@@ -3,7 +3,7 @@
         <table class="simple-table">
             <tr *ngFor="let row of txData | keyvalue">
                 <td>{{ row.key }}</td>
-                <td>{{ row.value || "-" }}</td>
+                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
             </tr>
         </table>
     </div>
