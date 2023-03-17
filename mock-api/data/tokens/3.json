@@ -1,0 +1,20 @@
+{
+  "data": {
+    "propertyid": 3,
+    "name": "Vesting Tokens",
+    "data": "Divisible Tokens",
+    "url": "www.tradelayer.org",
+    "divisible": 1,
+    "category": "N/A",
+    "subcategory": "N/A",
+    "kyc_ids allowed": "[]",
+    "issuer": "MK3MqrS7PSkjcdiEyCNB92w74vfAEveZnu",
+    "creationtxid": "0000000000000000000000000000000000000000000000000000000000000000",
+    "fixedissuance": 0,
+    "totaltokens": "1500000.00000000",
+    "creation block": 2172315,
+    "last 24h LTC volume": "0.00000000",
+    "last 24h Token volume": "0.00000000"
+  },
+  "statusCode": 200
+}

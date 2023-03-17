@@ -1,0 +1,10 @@
+{
+  "data": [
+    {
+      "propertyid": 3,
+      "balance": "500000.00000000",
+      "reserve": "0.00000000"
+    }
+  ],
+  "statusCode": 200
+}

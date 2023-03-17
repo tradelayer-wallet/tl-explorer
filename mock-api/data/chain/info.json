@@ -1,0 +1,14 @@
+{
+  "data": {
+    "tradelayer_version_int": 20002000,
+    "tradelayer_coreversion": "0.2.2",
+    "litecoinversion": "0.16.3",
+    "commitinfo": "",
+    "block": 2435641,
+    "blocktime": 1678373923,
+    "blocktransactions": 0,
+    "totaltransactions": 0,
+    "alerts": []
+  },
+  "statusCode": 200
+}

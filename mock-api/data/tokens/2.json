@@ -1,0 +1,20 @@
+{
+  "data": {
+    "propertyid": 2,
+    "name": "sLTC",
+    "data": "",
+    "url": "",
+    "divisible": 1,
+    "category": "N/A",
+    "subcategory": "N/A",
+    "kyc_ids allowed": "[0]",
+    "issuer": "",
+    "creationtxid": "0000000000000000000000000000000000000000000000000000000000000000",
+    "fixedissuance": 0,
+    "totaltokens": "0.00000000",
+    "creation block": -910656528,
+    "last 24h LTC volume": "0.00000000",
+    "last 24h Token volume": "0.00000000"
+  },
+  "statusCode": 200
+}
