@@ -1,0 +1,17 @@
+<div class="info-container" *ngIf="object$ | async as object; else loading">
+  <h2 *ngIf="object">{{ objectName }}:</h2>
+  <table class="simple-table" *ngIf="object; else noInfo">
+    <tbody>
+      <tr *ngFor="let row of object | keyvalue">
+          <td>{{ row.key }}</td>
+          <td>
+            <tl-possible-link [key]="row.key" [value]="row.value">
+              {{ row.value || '-'}}
+            </tl-possible-link>
+          </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<ng-template #loading>Loading...</ng-template>
+<ng-template #noInfo>The {{ objectName }} is empty</ng-template>

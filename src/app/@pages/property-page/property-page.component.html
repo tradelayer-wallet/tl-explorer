@@ -1,49 +1,7 @@
-<div class="page property-page-container">
-    <div class="prop-info-container" *ngIf="propData$ | async as propData; else loading">
-        <h3>Property:</h3>
-        <table class="simple-table" >
-            <tr *ngFor="let row of propData | keyvalue">
-                <td>{{ row.key }}</td>
-                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
-            </tr>
-        </table>
-    </div>
-    <div class="prop-info-container" *ngIf="propCurrencyTotal$ | async as propCurrencyTotal; else loading">
-        <h3>Currency:</h3>
-        <table class="simple-table">
-            <tr *ngFor="let row of propCurrencyTotal | keyvalue">
-                <td>{{ row.key }}</td>
-                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
-            </tr>
-        </table>
-    </div>
-    <div class="prop-info-container" *ngIf="ltcVolume$ | async as ltcVolume; else loading">
-        <h3>Ltc Volume:</h3>
-        <table class="simple-table">
-            <tr *ngFor="let row of ltcVolume | keyvalue">
-                <td>{{ row.key }}</td>
-                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
-            </tr>
-        </table>
-    </div>
-    <div class="prop-info-container" *ngIf="propCache$ | async as propCache; else loading">
-        <h3>Cache:</h3>
-        <table class="simple-table">
-            <tr *ngFor="let row of propCache | keyvalue">
-                <td>{{ row.key }}</td>
-                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
-            </tr>
-        </table>
-    </div>
-    <div class="prop-info-container" *ngIf="vestingInfo$ | async as vestingInfo; else loading">
-        <h3>Vesting Info:</h3>
-        <table class="simple-table">
-            <tr *ngFor="let row of vestingInfo | keyvalue">
-                <td>{{ row.key }}</td>
-                <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
-            </tr>
-        </table>
-    </div>
+<div class="page">
+    <tl-object-table [object$]="propData$" objectName="Property"></tl-object-table>
+    <tl-object-table [object$]="propCurrencyTotal$" objectName="Currency"></tl-object-table>
+    <tl-object-table [object$]="ltcVolume$" objectName="Ltc Volume"></tl-object-table>
+    <tl-object-table [object$]="propCache$" objectName="Cache"></tl-object-table>
+    <tl-object-table [object$]="vestingInfo$" objectName="Vesting Info"></tl-object-table>
 </div>
-<ng-template #loading>Loading...</ng-template>
-<ng-template #noData>No data!</ng-template>

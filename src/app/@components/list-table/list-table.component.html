@@ -1,0 +1,13 @@
+<div class="info-container" *ngIf="collection$ | async as collection; else loading">
+  <h1>{{ collectionName }}</h1>
+  <table class="simple-table" *ngIf="collection.length; else noData">
+    <tbody>
+      <tr *ngFor="let row of collection">
+          <td [routerLink]="link(row)">{{ row  || "-"  }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<ng-template #loading>Loading {{ collectionName }}...</ng-template>
+<ng-template #noData>No {{ collectionName }} </ng-template>

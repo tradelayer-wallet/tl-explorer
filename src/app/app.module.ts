@@ -16,9 +16,15 @@ import { TableBodyPipe, TableHeadersPipe } from './@utils/pipes';
 import { ContractPageComponent } from './@pages/contract-page/contract-page.component';
 import { LastWinnersPageComponent } from './@pages/last-winners/last-winners-page.component';
 import { PossibleLinkComponent } from './@components/possible-link/possible-link.component';
+import { CollectionTableComponent } from './@components/collection-table/collection-table.component';
+import { ObjectTableComponent } from './@components/object-table/object-table.component';
+import { ListTableComponent } from './@components/list-table/list-table.component';
 
 const CUSTOM_COMPONENTS = [
   PossibleLinkComponent,
+  CollectionTableComponent,
+  ObjectTableComponent,
+  ListTableComponent,
 ]
 
 const PAGE_COMPONENTS = [

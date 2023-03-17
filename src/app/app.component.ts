@@ -22,7 +22,7 @@ export class AppComponent {
     const routeArray = value.length === 64
       ? ['tx', value]
       : value.length >= 26 && value.length <= 35
-        ? ['address', value]
+        ? ['addresses', value]
         : ['error'];
     this.router.navigate(routeArray);
   }

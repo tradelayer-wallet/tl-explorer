@@ -1,33 +1,10 @@
-<div class="page address-page-container">
+<div class="page">
     <div class="title">
-        {{ address }}
+       <h1> {{ address }}</h1>
     </div>
     <div class="balance-container title" *ngIf="isWinningAddress$ | async as isWinningAddress">
-        <h3 *ngIf="isWinningAddress">This is a winning Address!</h3>
+        <h2 *ngIf="isWinningAddress">This is a winning Address!</h2>
     </div>
-    <div class="balance-container"  *ngIf="balanceData$ | async as balanceData; else loading">
-        <table class="simple-table" *ngIf="balanceData.length; else noData">
-            <tr>
-                <td *ngFor="let headerCell of balanceData | headers">
-                    {{ headerCell  || "-"  }}
-                </td>
-            </tr>
-            <tr *ngFor="let row of balanceData | entries">
-                <td *ngFor="let cell of row">
-                    <tl-possible-link [key]="cell[0]" [value]="cell[1]"></tl-possible-link>
-                </td>
-            </tr>
-        </table>
-    </div>
-    <div class="balance-container" *ngIf="unvestedBalance$ | async as unvestedBalance; else loading">
-        <h3 *ngIf="unvestedBalance">Unvested Balance</h3>
-        <table class="simple-table"  *ngIf="unvestedBalance">
-            <tr *ngFor="let row of unvestedBalance | keyvalue">
-                <td>{{ row.key }}</td>
-                 <td><tl-possible-link [key]="row.key" [value]="row.value"></tl-possible-link></td>
-            </tr>
-        </table>
-      </div>
+    <tl-collection-table [collection$]="balanceData$" collectionName="Balance Data" linkType="property" ></tl-collection-table>
+    <tl-object-table [object$]="unvestedBalance$" objectName="Unvested Balance"></tl-object-table>
 </div>
-<ng-template #loading>Loading...</ng-template>
-<ng-template #noData>No data!</ng-template>

@@ -1,13 +1,13 @@
-<p *ngIf="link.length">
-  <a [routerLink]="link">
-    {{ value || '-' }}
-  </a>
-</p>
-<p *ngIf="isExternal">
-  <a target="_blank" href="{{value.startsWith('http') ? value : 'https://'+value}}">
-    {{ value || '-' }}
-  </a>
-</p>
-<p *ngIf="!link.length && !isExternal">
-  {{ value || '-'}}
-</p>
+<a *ngIf="link.length" [routerLink]="link">
+  <ng-container *ngTemplateOutlet="outlet" ></ng-container>
+</a>
+<a *ngIf="isExternal" target="_blank" href="{{value.startsWith('http') ? value : 'https://'+value}}">
+  <ng-container *ngTemplateOutlet="outlet" ></ng-container>
+</a>
+<ng-container *ngIf="!link.length && !isExternal">
+  <ng-container *ngTemplateOutlet="outlet" ></ng-container>
+</ng-container>
+<ng-template #outlet>
+   <ng-content></ng-content>
+</ng-template>
+

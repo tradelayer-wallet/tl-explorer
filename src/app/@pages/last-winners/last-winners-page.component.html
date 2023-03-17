@@ -1,12 +1,4 @@
-<div class="page last-winners-page-container">
-  <div class="balance-container"  *ngIf="lastWinners$ | async as lastWinners; else loading">
-      <h2>Last Winners</h2>
-      <table class="simple-table" *ngIf="lastWinners.length; else noData">
-          <tr *ngFor="let row of lastWinners">
-              <td>{{ row  || "-"  }}</td>
-          </tr>
-      </table>
-  </div>
+<div class="page">
+    <tl-list-table [collection$]="lastWinners$" collectionName="Last Winners" linkType="address">
+    </tl-list-table>
 </div>
-<ng-template #loading>Loading...</ng-template>
-<ng-template #noData>No previous winners!</ng-template>
