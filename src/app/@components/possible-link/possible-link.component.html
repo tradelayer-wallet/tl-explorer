@@ -1,0 +1,13 @@
+<a *ngIf="link.length" [routerLink]="link">
+  <ng-container *ngTemplateOutlet="outlet" ></ng-container>
+</a>
+<a *ngIf="isExternal" target="_blank" href="{{value.startsWith('http') ? value : 'https://'+value}}">
+  <ng-container *ngTemplateOutlet="outlet" ></ng-container>
+</a>
+<ng-container *ngIf="!link.length && !isExternal">
+  <ng-container *ngTemplateOutlet="outlet" ></ng-container>
+</ng-container>
+<ng-template #outlet>
+   <ng-content></ng-content>
+</ng-template>
+

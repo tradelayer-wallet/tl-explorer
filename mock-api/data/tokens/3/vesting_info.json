@@ -1,0 +1,21 @@
+{
+  "data": {
+    "propertyid": 3,
+    "name": "Vesting Tokens",
+    "data": "Divisible Tokens",
+    "url": "www.tradelayer.org",
+    "divisible": 1,
+    "issuer": "MK3MqrS7PSkjcdiEyCNB92w74vfAEveZnu",
+    "activation block": 2172315,
+    "litecoin volume": "0.00000000",
+    "vested percentage": "0.00000000",
+    "last vesting block": 0,
+    "total ALL minted": "0.00000000",
+    "total vested": "1000000.00000000",
+    "owners": 0,
+    "total tokens": "1500000.00000000",
+    "first yeard ended": "true",
+    "kyc_ids allowed": "[]"
+  },
+  "statusCode": 200
+}

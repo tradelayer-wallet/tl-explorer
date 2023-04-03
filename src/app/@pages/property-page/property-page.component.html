@@ -1,10 +1,7 @@
-<div class="page property-page-container">
-    <div class="prop-info-container">
-        <table class="simple-table" *ngIf='propData'>
-            <tr *ngFor='let row of propData | keyvalue'>
-                <td>{{ row.key }}</td>
-                <td>{{ row.value || '-' }}</td>
-            </tr>
-        </table>
-    </div>
+<div class="page">
+    <tl-object-table [object$]="propData$" objectName="Property"></tl-object-table>
+    <tl-object-table [object$]="propCurrencyTotal$" objectName="Currency"></tl-object-table>
+    <tl-object-table [object$]="ltcVolume$" objectName="Ltc Volume"></tl-object-table>
+    <tl-object-table [object$]="propCache$" objectName="Cache"></tl-object-table>
+    <tl-object-table [object$]="vestingInfo$" objectName="Vesting Info"></tl-object-table>
 </div>

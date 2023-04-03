@@ -4,7 +4,6 @@ import { ApiService } from "./api.service";
 @Injectable({
     providedIn: 'root',
 })
-
 export class AddressService {
     constructor(
         private apiService: ApiService,
@@ -20,5 +19,9 @@ export class AddressService {
 
     getBalance(address: string) {
         return this.tlApi.getBalance(address);
+    }
+
+    getUnvestedBalance(address: string) {
+        return this.tlApi.getUnvestedBalance(address);
     }
 }

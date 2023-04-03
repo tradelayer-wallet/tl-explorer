@@ -1,47 +1,37 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { map, Observable, of, tap } from 'rxjs';
 import { AddressService } from 'src/app/@core/services/address.service';
-import { convertArrayToTable } from 'src/app/@utils/convert';
+import { ChainService } from 'src/app/@core/services/chain.service';
 
 @Component({
   templateUrl: './address-page.component.html',
   styleUrls: ['./address-page.component.scss']
 })
-export class AddressPageComponent {
-  balanceLoading: boolean = false;
-  balanceData: any[] = [];
+export class AddressPageComponent implements OnInit {
+  balanceData$: Observable<any[]> = of([]);
+  unvestedBalance$: Observable<any> = of({});
+  isWinningAddress$: Observable<boolean> = of(false);
 
   constructor(
     private addressService: AddressService,
+    private chainService: ChainService,
     private route: ActivatedRoute,
-    private router: Router,
-  ) {
-    this.getAddressBalance();
+  ) {}
+  
+  ngOnInit(): void {
+    if (!this.address) {
+      return;
+    }
+    this.balanceData$ = this.addressService.getBalance(this.address);
+    this.unvestedBalance$ = this.addressService.getUnvestedBalance(this.address);
+    this.isWinningAddress$ = this.chainService.listNodeRewardAddresses()
+      .pipe(
+        map((addresses: Array<string>) => addresses.includes(this.address))
+      );
   }
 
   get address() {
-    return this.route.snapshot.params?.['address'];
-  }
-
-  getAddressBalance() {
-    const address = this.address || null;
-    if (!address) return;
-    this.balanceLoading = true;
-    this.addressService.getBalance(address)
-      .subscribe({
-        next: (res) => {
-          console.log(res)
-          if (res.error || !res.data) {
-            this.router.navigate(['error']);
-          } else {
-            this.balanceData = convertArrayToTable(res.data);
-          }
-          this.balanceLoading = false;
-        },
-        error: (err) => {
-          this.router.navigate(['error']);
-          this.balanceLoading = false;
-        }
-      });
+    return this.route.snapshot.params?.['address'] || null;
   }
 }
