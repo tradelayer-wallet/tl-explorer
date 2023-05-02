@@ -36,32 +36,32 @@ export class TradeLayerApi {
     }
 
     getProperties(): Observable<any> {
-        const path = '/tokens';
+        const path = '/token/list';
         return this.get(path);
     }
 
     getPropData(id: number): Observable<any>  {
-        const path = `/tokens/${id}`;
+        const path = `/token/${id}`;
         return this.get(path);
     }
 
     getPropCurrencyTotal(id: number): Observable<any>  {
-        const path = `/tokens/${id}/currency_total`;
+        const path = `/token/${id}/currency_total`;
         return this.get(path);
     }
 
     getPropCache(id: number, cacheType: PropertyCacheType = PropertyCacheType.Total): Observable<any>  {
-        const path = `/tokens/${id}/cache?cacheType=${cacheType}`;
+        const path = `/token/${id}/cache?cacheType=${cacheType}`;
         return this.get(path);
     }
 
     getPropVestingInfo(id: number) {
-        const path = `/tokens/${id}/vesting_info`;
+        const path = `/token/${id}/vesting_info`;
         return this.get(path);
     }
 
     getPropLtcVolume(id: number, startBlock: number, endBlock: number): Observable<any>  {
-        const path = `/tokens/${id}/ltc_volume?startBlock=${startBlock}&endBlock=${endBlock}`;
+        const path = `/token/${id}/ltc_volume?startBlock=${startBlock}&endBlock=${endBlock}`;
         return this.get(path);
     }
 

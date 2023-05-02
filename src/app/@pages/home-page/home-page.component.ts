@@ -22,10 +22,10 @@ export class HomePageComponent implements OnInit {
   ) {  }
 
   ngOnInit(): void {
-    this.properties$ = this.propertyService.getProperties();
+    // this.properties$ = this.propertyService.getProperties();
     this.mainChainInfo$ = this.chainService.getChainInfo();
-    this.natives$ = this.contractService.getNatives();
-    this.oracles$ = this.contractService.getOracles();
-    this.nextReward$ = this.chainService.getNextReward();
+    // this.natives$ = this.contractService.getNatives();
+    // this.oracles$ = this.contractService.getOracles();
+    // this.nextReward$ = this.chainService.getNextReward();
   }
 }
