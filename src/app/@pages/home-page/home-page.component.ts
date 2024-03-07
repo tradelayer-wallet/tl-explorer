@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, map } from 'rxjs';
 import { ChainService } from 'src/app/@core/services/chain.service';
 import { ContractService } from 'src/app/@core/services/contract.service';
 import { PropertyService } from 'src/app/@core/services/propety.service';
@@ -22,8 +22,12 @@ export class HomePageComponent implements OnInit {
   ) {  }
 
   ngOnInit(): void {
-    // this.properties$ = this.propertyService.getProperties();
-    this.mainChainInfo$ = this.chainService.getChainInfo();
+    
+    this.mainChainInfo$ = this.chainService.getChainInfo()
+    this.properties$ = this.propertyService.getProperties();
+    //this.oracles$ = this.contractService.getOracles();
+
+    //this.mainChainInfo$ = this.chainService.getChainInfo();
     // this.natives$ = this.contractService.getNatives();
     // this.oracles$ = this.contractService.getOracles();
     // this.nextReward$ = this.chainService.getNextReward();

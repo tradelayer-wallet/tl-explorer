@@ -28,25 +28,25 @@ export class PropertyPageComponent implements OnInit {
     const propertyId = parseFloat(this.route.snapshot.params?.['propertyId']);
     this.propData$ = this.propertyService.getPropData(propertyId)
       .pipe(shareReplay(1));
-    this.propCurrencyTotal$ = this.propData$
-      .pipe(
-        mergeMap(() => this.propertyService.getPropCurrencyTotal(propertyId))
-      );
-    this.ltcVolume$ = this.propData$
-      .pipe(
-        mergeMap(() => this.chainService.getChainInfo()),
-        mergeMap(({block}: {block: number}) => {
-          return this.propertyService.getPropLtcVolume(propertyId, block - LTC_BLOCKS_PER_DAY, block);
-        }));
+    // this.propCurrencyTotal$ = this.propData$
+    //   .pipe(
+    //     mergeMap(() => this.propertyService.getPropCurrencyTotal(propertyId))
+    //   );
+    // this.ltcVolume$ = this.propData$
+    //   .pipe(
+    //     mergeMap(() => this.chainService.getChainInfo()),
+    //     mergeMap(({block}: {block: number}) => {
+    //       return this.propertyService.getPropLtcVolume(propertyId, block - LTC_BLOCKS_PER_DAY, block);
+    //     }));
     this.propCache$ = this.propData$
       .pipe(
         mergeMap(() => {
           return this.propertyService.getPropCache(propertyId, PropertyCacheType.Total);
         }));
-    this.vestingInfo$ = this.propData$
-      .pipe(
-        mergeMap(() => {
-          return this.propertyService.getPropVestingInfo(propertyId);
-        }));
+    // this.vestingInfo$ = this.propData$
+    //   .pipe(
+    //     mergeMap(() => {
+    //       return this.propertyService.getPropVestingInfo(propertyId);
+    //     }));
   }
 }

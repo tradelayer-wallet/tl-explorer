@@ -24,11 +24,11 @@ export class AddressPageComponent implements OnInit {
       return;
     }
     this.balanceData$ = this.addressService.getBalance(this.address);
-    this.unvestedBalance$ = this.addressService.getUnvestedBalance(this.address);
-    this.isWinningAddress$ = this.chainService.listNodeRewardAddresses()
-      .pipe(
-        map((addresses: Array<string>) => addresses.includes(this.address))
-      );
+    // this.unvestedBalance$ = this.addressService.getUnvestedBalance(this.address);
+    // this.isWinningAddress$ = this.chainService.listNodeRewardAddresses()
+    //   .pipe(
+    //     map((addresses: Array<string>) => addresses.includes(this.address))
+    //   );
   }
 
   get address() {

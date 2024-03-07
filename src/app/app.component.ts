@@ -19,9 +19,9 @@ export class AppComponent {
     }
     this.searchValue = '';
 
-    const routeArray = value.length === 64
+    const routeArray = value.startsWith('tx') //value.length === 64
       ? ['tx', value]
-      : value.length >= 26 && value.length <= 35
+      : value.startsWith('tl')
         ? ['addresses', value]
         : ['error'];
     this.router.navigate(routeArray);

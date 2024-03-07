@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { environment } from "src/environments/environment";
 import { HttpClient } from "@angular/common/http";
-import { catchError, map, Observable } from "rxjs";
+import { catchError, map, Observable, toArray } from "rxjs";
 import { Router } from "@angular/router";
 
 export enum PropertyCacheType {
@@ -26,7 +26,7 @@ export class TradeLayerApi {
     }
 
     getBalance(address: string): Observable<any> {
-        const path = `/addresses/${address}/balance`;
+        const path = `/tl_getAllBalancesForAddress/${address}`;
         return this.get(path);
     }
 
@@ -36,12 +36,12 @@ export class TradeLayerApi {
     }
 
     getProperties(): Observable<any> {
-        const path = '/token/list';
+        const path = '/tl_listproperties';
         return this.get(path);
     }
 
     getPropData(id: number): Observable<any>  {
-        const path = `/token/${id}`;
+        const path = `/tl_getproperty/${id}`;
         return this.get(path);
     }
 
@@ -51,7 +51,7 @@ export class TradeLayerApi {
     }
 
     getPropCache(id: number, cacheType: PropertyCacheType = PropertyCacheType.Total): Observable<any>  {
-        const path = `/token/${id}/cache?cacheType=${cacheType}`;
+        const path = `/tl_propertyFeeCache/${id}`;  ///cache?cacheType=${cacheType}`;
         return this.get(path);
     }
 
@@ -89,32 +89,17 @@ export class TradeLayerApi {
     }
 
     getOracleContracts(): Observable<any> {
-        const path = '/contracts/oracles';
+        const path = '/tl_listoracles';
         return this.get(path);
     }
 
     getChainInfo(): Observable<any> {
-        const path = '/chain/info';
-        return this.get(path);
-    }
-
-    getNextReward(): Observable<any> {
-        const path = '/chain/next_reward';
-        return this.get(path);
-    }
-
-    listNodeRewardAddresses(): Observable<any> {
-        const path = '/chain/node_reward_addresses';
-        return this.get(path);
-    }
-
-    getLastWinners(): Observable<any> {
-        const path = '/chain/last_winners';
+        const path = '/tl_getchaininfo';
         return this.get(path);
     }
 
     getTxData(id: string): Observable<any> {
-        const path = `/tx/${id}`;
+        const path = `/tl_getTxData/${id}`;
         return this.get(path);
     }
 
@@ -126,12 +111,13 @@ export class TradeLayerApi {
         const url = `${this.apiUrl}${path}`;
         return this.http.get(url)
             .pipe(
-                map((res: any) => {
-                    if (res.error || !res.data) {
-                        throw res.error;
-                    }
-                    return res.data;
-                }),
+                // map((res: any) => {
+                //     if (res.error || !res.data) {
+                //         throw res.error;
+                //     }
+                //     return res.data;
+                // }),
+                map(x=>x),
                 catchError((error) => {
                     console.log(error);
                     const message = error?.message || error;
