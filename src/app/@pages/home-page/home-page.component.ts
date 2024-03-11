@@ -23,7 +23,7 @@ export class HomePageComponent implements OnInit {
 
   ngOnInit(): void {
     
-    this.mainChainInfo$ = this.chainService.getChainInfo()
+    //this.mainChainInfo$ = this.chainService.getChainInfo()
     this.properties$ = this.propertyService.getProperties();
     //this.oracles$ = this.contractService.getOracles();
 
