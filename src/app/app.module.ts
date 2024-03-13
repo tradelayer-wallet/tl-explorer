@@ -9,6 +9,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
 import { AddressPageComponent } from './@pages/address-page/address-page.component';
+import { BlockPageComponent } from './@pages/block-page/block-page.component';
 import { HomePageComponent } from './@pages/home-page/home-page.component';
 import { TxPageComponent } from './@pages/tx-page/tx-page.component';
 import { PropertyPageComponent } from './@pages/property-page/property-page.component';
@@ -30,6 +31,7 @@ const CUSTOM_COMPONENTS = [
 const PAGE_COMPONENTS = [
     HomePageComponent,
     AddressPageComponent,
+    BlockPageComponent,
     ContractPageComponent,
     LastWinnersPageComponent,
     TxPageComponent,

@@ -19,11 +19,11 @@ export class AppComponent {
     }
     this.searchValue = '';
 
-    const routeArray = value.startsWith('tx') //value.length === 64
+    const routeArray = value.length === 64
       ? ['tx', value]
-      : value.startsWith('tl')
+      : Number.isNaN(parseInt(value))
         ? ['addresses', value]
-        : ['error'];
+        : ['blocks', parseInt(value)];
     this.router.navigate(routeArray);
   }
 }

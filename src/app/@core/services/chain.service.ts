@@ -17,4 +17,8 @@ export class ChainService {
     getChainInfo() {
         return this.tlApi.getChainInfo();
     }
+    
+    getTop10Blocks(){
+        return this.tlApi.getTop10Blocks();
+    }
 }

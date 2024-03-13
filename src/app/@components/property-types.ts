@@ -11,9 +11,12 @@ const TRANSACTION_PROPERTIES = [
 const PROPERTY_PROPERTIES = [
   'propertyid'
 ];
+const BLOCK_PROPERTIES = [
+  'blockid'
+];
 
-const PROPERTY_TYPES = ['address', 'contract', 'url', 'transaction', 'property'];
-export type PROPERTY_TYPES = 'address' | 'contract' | 'url' | 'transaction' | 'property';
+const PROPERTY_TYPES = ['blocks', 'address', 'contract', 'url', 'transaction', 'property'];
+export type PROPERTY_TYPES = 'blocks' | 'address' | 'contract' | 'url' | 'transaction' | 'property';
 
 function isPropertyType(value: string): value is PROPERTY_TYPES {
   return PROPERTY_TYPES.includes(value);
@@ -22,6 +25,7 @@ function isPropertyType(value: string): value is PROPERTY_TYPES {
 const PropertyTypeToProperties: {
   [key in PROPERTY_TYPES]: string[];
 } = {
+  blocks: BLOCK_PROPERTIES,
   address: ADDRESS_PROPERTIES,
   contract: CONTRACT_PROPERTIES,
   url: URL_PROPERTIES,
@@ -34,6 +38,7 @@ export type LinkFunction = (value: string) => string[];
 export const TypeToHandler: {
   [key in PROPERTY_TYPES]: LinkFunction
 } = {
+  blocks: (value: string) => ['/', 'blocks', value],
   address: (value: string) => ['/', 'addresses', value],
   transaction: (value: string) => ['/', 'tx', value],
   contract: (value: string) => ['/', 'contracts', value],

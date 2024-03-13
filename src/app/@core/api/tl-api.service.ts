@@ -98,8 +98,23 @@ export class TradeLayerApi {
         return this.get(path);
     }
 
+    getTop10Blocks(): Observable<any> {
+        const path = '/tl_gettop10blocks';
+        return this.get(path);
+    }
+
     getTxData(id: string): Observable<any> {
-        const path = `/tl_getTxData/${id}`;
+        const path = `/tl_gettxdata/${id}`;
+        return this.get(path);
+    }
+
+    getTransactionsForAddress(addr: string): Observable<any> {
+        const path = `/tl_gettransactionsforaddress/${addr}`;
+        return this.get(path);
+    }
+    
+    getTransactionsForBlock(bid: number): Observable<any> {
+        const path = `/tl_gettransactionsforblock/${bid}`;
         return this.get(path);
     }
 
