@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { environment } from "src/environments/environment";
 import { HttpClient } from "@angular/common/http";
-import { catchError, map, Observable, toArray } from "rxjs";
+import { catchError, map, Observable, of } from "rxjs";
 import { Router } from "@angular/router";
 
 export enum PropertyCacheType {
@@ -10,6 +10,36 @@ export enum PropertyCacheType {
     SpotFees = 2,
     Total
 };
+
+type Tx = {
+    txid: string,
+    from: string,
+    to: string,
+    amount: number
+}
+
+type Block = {
+    blockId: number,
+    date: Date,
+    tx: Tx[],
+}
+
+const TXs: Tx[] = [
+    {txid: 'a7b32f99f4dbb63f36511cdac6c55b7b17f9608e2b8c0ec27752441eebf11806', to: 'a', from: 'b', amount: 10},
+    {txid: 'b7b32f99f4dbb63f36511cdac6c55b7b17f9608e2b8c0ec27752441eebf11806', to: 'b', from: 'c', amount: 20},
+    {txid: 'c7b32f99f4dbb63f36511cdac6c55b7b17f9608e2b8c0ec27752441eebf11806', to: 'c', from: 'd', amount: 30},
+    {txid: 'd7b32f99f4dbb63f36511cdac6c55b7b17f9608e2b8c0ec27752441eebf11806', to: 'd', from: 'a', amount: 40},
+    {txid: 'e7b32f99f4dbb63f36511cdac6c55b7b17f9608e2b8c0ec27752441eebf11806', to: 'e', from: 'c', amount: 50},
+    {txid: 'f7b32f99f4dbb63f36511cdac6c55b7b17f9608e2b8c0ec27752441eebf11806', to: 'f', from: 'b', amount: 60},
+]
+const Tip = 834692;
+const DT = new Date('3/14/2024 2:35:30 PM')
+const BLOCKS: Block[] = Array.from(Array(10)).map((n,i)=>(
+    { blockId: Tip-i, date: DT, tx: TXs }
+))
+
+
+
 
 @Injectable({
     providedIn: 'root',
@@ -99,21 +129,26 @@ export class TradeLayerApi {
     }
 
     getTop10Blocks(): Observable<any> {
+        //return of(BLOCKS.map(b=>({ blockId: b.blockId, date: b.date.toISOString(), tx: b.tx.length })));
         const path = '/tl_gettop10blocks';
         return this.get(path);
     }
 
-    getTxData(id: string): Observable<any> {
-        const path = `/tl_gettxdata/${id}`;
+    getTransaction(id: string): Observable<any> {
+        //return of({});
+        const path = `/tl_gettransaction/${id}`;
         return this.get(path);
     }
 
     getTransactionsForAddress(addr: string): Observable<any> {
+        //return of(TXs.filter(x=>x.to == addr || x.from == addr));
         const path = `/tl_gettransactionsforaddress/${addr}`;
         return this.get(path);
     }
     
     getTransactionsForBlock(bid: number): Observable<any> {
+        // let b = BLOCKS.find(b=>b.blockId == bid)
+        // return of(b?.tx);
         const path = `/tl_gettransactionsforblock/${bid}`;
         return this.get(path);
     }
