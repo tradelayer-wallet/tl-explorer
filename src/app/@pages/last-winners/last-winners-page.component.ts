@@ -12,6 +12,6 @@ export class LastWinnersPageComponent implements OnInit {
   constructor(private chainService: ChainService) { }
 
   ngOnInit(): void {
-    this.lastWinners$ = this.chainService.getLastWinners();
+    //this.lastWinners$ = this.chainService.getLastWinners();
   }
 }

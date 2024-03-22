@@ -21,9 +21,9 @@ export class AppComponent {
 
     const routeArray = value.length === 64
       ? ['tx', value]
-      : value.length >= 26 && value.length <= 35
+      : Number.isNaN(parseInt(value))
         ? ['addresses', value]
-        : ['error'];
+        : ['blocks', parseInt(value)];
     this.router.navigate(routeArray);
   }
 }

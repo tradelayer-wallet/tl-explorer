@@ -14,7 +14,15 @@ export class TxService {
         return this.apiService.tlApi;
     }
 
-    getTxData(txid: string) {
-        return this.tlApi.getTxData(txid);
+    getTransaction(txid: string) {
+        return this.tlApi.getTransaction(txid);
+    }
+
+    getTransactionsForAddress(addr: string) {
+        return this.tlApi.getTransactionsForAddress(addr);
+    }
+
+    getTransactionsForBlock(bid: number) {
+        return this.tlApi.getTransactionsForBlock(bid);
     }
 }

@@ -17,19 +17,8 @@ export class ChainService {
     getChainInfo() {
         return this.tlApi.getChainInfo();
     }
-
-    getNextReward() {
-        return this.tlApi.getNextReward();
-    }
-
-    listNodeRewardAddresses() {
-        return this.tlApi.listNodeRewardAddresses();
-    }
-
-    getLastWinners() {
-        return this.tlApi.getLastWinners()
-            .pipe(
-                map(collection => collection.slice(1))
-            );
+    
+    getTop10Blocks(){
+        return this.tlApi.getTop10Blocks();
     }
 }

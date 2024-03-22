@@ -21,6 +21,6 @@ export class TxPageComponent implements OnInit{
       this.txData$ =  of(null);
       return;
     }
-    this.txData$ = this.txService.getTxData(txId)
+    this.txData$ = this.txService.getTransaction(txId)
   }
 }

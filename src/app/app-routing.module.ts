@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AddressPageComponent } from './@pages/address-page/address-page.component';
+import { BlockPageComponent } from './@pages/block-page/block-page.component';
 import { ContractPageComponent } from './@pages/contract-page/contract-page.component';
 import { ErrorPageComponent } from './@pages/error-page/error-page.component';
 import { HomePageComponent } from './@pages/home-page/home-page.component';
@@ -16,6 +17,10 @@ const routes: Routes = [
   {
     path:'addresses/:address',
     component: AddressPageComponent,
+  },
+  {
+    path:'blocks/:blockId',
+    component: BlockPageComponent,
   },
   {
     path: 'last-winners',

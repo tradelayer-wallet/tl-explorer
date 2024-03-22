@@ -1,17 +1,16 @@
 <div class="page">
-    <!-- <div class="info-container" *ngIf="nextReward$ | async as nextReward">
+<!-- 
+    <div class="info-container" *ngIf="nextReward$ | async as nextReward">
         <h1 *ngIf="nextReward">Next Reward: {{ nextReward.amount }} </h1>
-    </div> -->
-
-    <tl-object-table [object$]="mainChainInfo$" objectName="Chain Info">
-    </tl-object-table>
-
-    <!-- <tl-collection-table [collection$]="properties$" [collectionName]="'Properties'" linkType="property">
-    </tl-collection-table>
+    </div>
 
     <tl-collection-table [collection$]="oracles$" collectionName='Oracle Contracts' linkType="contract">
     </tl-collection-table>
-
     <tl-collection-table [collection$]="natives$" collectionName='Native Contracts' linkType="contract">
-    </tl-collection-table> -->
+    </tl-collection-table>
+    <tl-collection-table [collection$]="properties$" [collectionName]="'Properties'" linkType="property">
+    </tl-collection-table>
+-->
+
+    <tl-collection-table [collection$]="blocks$" collectionName="Blocks" linkType="blocks"></tl-collection-table>
 </div>

@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { map, Observable, of, tap } from 'rxjs';
 import { AddressService } from 'src/app/@core/services/address.service';
 import { ChainService } from 'src/app/@core/services/chain.service';
+import { TxService } from 'src/app/@core/services/tx.service';
 
 @Component({
   templateUrl: './address-page.component.html',
@@ -10,6 +11,7 @@ import { ChainService } from 'src/app/@core/services/chain.service';
 })
 export class AddressPageComponent implements OnInit {
   balanceData$: Observable<any[]> = of([]);
+  tx$: Observable<any[]> = of([]);
   unvestedBalance$: Observable<any> = of({});
   isWinningAddress$: Observable<boolean> = of(false);
 
@@ -17,18 +19,20 @@ export class AddressPageComponent implements OnInit {
     private addressService: AddressService,
     private chainService: ChainService,
     private route: ActivatedRoute,
+    private txService: TxService
   ) {}
   
   ngOnInit(): void {
     if (!this.address) {
       return;
     }
-    this.balanceData$ = this.addressService.getBalance(this.address);
-    this.unvestedBalance$ = this.addressService.getUnvestedBalance(this.address);
-    this.isWinningAddress$ = this.chainService.listNodeRewardAddresses()
-      .pipe(
-        map((addresses: Array<string>) => addresses.includes(this.address))
-      );
+    this.tx$ = this.txService.getTransactionsForAddress(this.address);
+    //this.balanceData$ = this.addressService.getBalance(this.address);
+    // this.unvestedBalance$ = this.addressService.getUnvestedBalance(this.address);
+    // this.isWinningAddress$ = this.chainService.listNodeRewardAddresses()
+    //   .pipe(
+    //     map((addresses: Array<string>) => addresses.includes(this.address))
+    //   );
   }
 
   get address() {
