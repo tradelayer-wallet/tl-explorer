@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { PROPERTY_TYPES, PropertyToPropertyType, isLinkable, getLinkFromPropertyName } from '../property-types';
+import { safeExternalHref } from 'src/app/@core/safe-link';
 
 @Component({
   selector: 'tl-possible-link',
@@ -60,34 +61,10 @@ export class PossibleLinkComponent implements OnChanges {
     const propertyType: PROPERTY_TYPES = PropertyToPropertyType[this.key];
     this.isExternal = propertyType === 'url';
     if (this.isExternal) {
-      this.externalHref = PossibleLinkComponent.buildExternalHref(this.value);
+      this.externalHref = safeExternalHref(this.value);
       return;
     }
 
     this.link = getLinkFromPropertyName(this.key, this.value);
-  }
-
-  // The value comes from attacker-controllable on-chain metadata. The old
-  // template gate `value.startsWith('http')` accepted junk schemes like
-  // `httpfoo:` and threw on non-string values. Parse with the URL API and
-  // allowlist http/https only. See security review #9 (M1).
-  private static buildExternalHref(value: unknown): string | null {
-    if (typeof value !== 'string') {
-      return null;
-    }
-    const trimmed = value.trim();
-    if (!trimmed) {
-      return null;
-    }
-    const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-    try {
-      const url = new URL(candidate);
-      if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-        return null;
-      }
-      return url.href;
-    } catch {
-      return null;
-    }
   }
 }

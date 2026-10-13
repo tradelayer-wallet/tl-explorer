@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { IdParam } from "../api/tl-api.service";
 import { ApiService } from "./api.service";
 
 @Injectable({
@@ -14,19 +15,19 @@ export class ContractService {
         return this.apiService.tlApi;
     }
 
-    getContract(id: number) {
+    getContract(id: IdParam) {
         return this.tlApi.getContract(id);
     }
 
-    getOpenInterest(id: number) {
+    getOpenInterest(id: IdParam) {
         return this.tlApi.getContractOpenInterest(id); 
     }
 
-    getTradeHistory(id: number) {
+    getTradeHistory(id: IdParam) {
         return this.tlApi.getContractTradeHistory(id); 
     }
 
-    getTradeHistoryUnfiltered(id: number) {
+    getTradeHistoryUnfiltered(id: IdParam) {
         return this.tlApi.getContractTradeHistoryUnfiltered(id); 
     }
 

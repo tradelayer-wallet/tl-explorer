@@ -41,196 +41,167 @@ const BLOCKS: Block[] = Array.from(Array(10)).map((n,i)=>(
 
 
 
+// Route params are interpolated into backend URL paths. Without validation, a
+// crafted link (e.g. `..%2F..%2Fsome_other_endpoint`) lets the browser smuggle
+// GET requests to unrelated endpoints on the RPC proxy (security review H3).
+//
+// Every API path is built by TradeLayerApi.get(), a tagged template whose
+// interpolations must be ApiParam values. ApiParam can only be created by the
+// validating factories below, so a raw string cannot reach the URL: it is a
+// type error at compile time, and get() also refuses it at runtime.
+const TXID_RE = /^[0-9a-fA-F]{64}$/;
+// base58 (legacy) and bech32 (segwit) addresses are alphanumeric. This charset
+// excludes `/`, `.`, `?`, `#`, `%` and whitespace, so encoding is a no-op.
+const ADDRESS_RE = /^[A-Za-z0-9]{10,120}$/;
+// Numeric ids arrive as route-param strings (`'123'`) or as numbers. Strings
+// must be canonical decimal digits (no sign, point, hex or exponent) of at most
+// 16 characters; numbers must be safe non-negative integers. Number.isSafeInteger
+// rejects the values above 2^53 - 1 that a 16-digit string can still express.
+const ID_RE = /^\d{1,16}$/;
+
+export type IdParam = number | string;
+
+class ApiParam {
+    // Only the static factories create instances, so a non-null `encoded` has
+    // always passed its validator. Plain objects and raw strings lack it.
+    private constructor(readonly encoded: string | null) {}
+
+    static txid(value: unknown): ApiParam {
+        return new ApiParam(ApiParam.match(value, TXID_RE));
+    }
+
+    static address(value: unknown): ApiParam {
+        return new ApiParam(ApiParam.match(value, ADDRESS_RE));
+    }
+
+    static id(value: unknown): ApiParam {
+        return new ApiParam(ApiParam.canonicalId(value));
+    }
+
+    private static match(value: unknown, pattern: RegExp): string | null {
+        return (typeof value === 'string' && pattern.test(value)) ? encodeURIComponent(value) : null;
+    }
+
+    private static canonicalId(value: unknown): string | null {
+        if (typeof value === 'string') {
+            if (!ID_RE.test(value)) return null;
+            // Number() drops leading zeros: '007' -> 7.
+            value = Number(value);
+        }
+        return (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0)
+            ? String(value)
+            : null;
+    }
+}
+
 @Injectable({
     providedIn: 'root',
 })
 export class TradeLayerApi {
-    // Route params are interpolated into backend URL paths. Without strict
-    // validation and percent-encoding, a crafted link (e.g.
-    // `..%2F..%2Fsome_other_endpoint`) lets the browser smuggle GET requests
-    // to unrelated endpoints on the RPC proxy. See security review #9 (H3).
-    private static readonly TXID_RE = /^[0-9a-fA-F]{64}$/;
-    // base58 (legacy) / bech32 (segwit) addresses are strictly alphanumeric;
-    // this charset excludes `/`, `.`, `?`, `#` and `%` regardless of format.
-    private static readonly ADDRESS_RE = /^[A-Za-z0-9]{10,120}$/;
-    // Route params arrive as strings (`'123'`), so ids accept a canonical
-    // non-negative decimal integer form only (no sign, decimal point, hex or
-    // exponent notation). 16 digits is the widest a Number can represent;
-    // the safe-integer check below rejects the exact unsafe tail.
-    private static readonly ID_RE = /^\d{1,16}$/;
-
     constructor(
         private http: HttpClient,
         private router: Router,
     ) {}
 
-    private invalidParam(): Observable<never> {
-        // Navigate to the error page but emit nothing downstream: callers
-        // chain these observables into data pipelines, and emitting the
-        // navigation result (`true`) made tables briefly render `true` and
-        // chained lookups fire extra error navigations. See adversarial review.
-        this.router.navigate(['error'], {
-            queryParams: { message: 'Invalid lookup parameter' }});
-        return EMPTY;
-    }
-
-    private pathSegment(value: string, pattern: RegExp): string | null {
-        return (typeof value === 'string' && pattern.test(value)) ? encodeURIComponent(value) : null;
-    }
-
-    private safeId(id: number | string): string | null {
-        // Accept numeric strings as well as numbers: route params are strings
-        // (`/contracts/123` -> `'123'`) and the old number-only check rejected
-        // every route-driven lookup. Only the canonical digit form above is
-        // accepted, so `'1.5'`, `'1e3'`, `'0x10'`, `''` and friends are out;
-        // `Number()` normalization then trims leading zeros (`'007'` -> `7`).
-        if (typeof id === 'string') {
-            if (!TradeLayerApi.ID_RE.test(id)) return null;
-            id = Number(id);
-        }
-        return (Number.isSafeInteger(id) && id >= 0) ? String(id) : null;
-    }
-
     validateAddress(address: string): Observable<any> {
-        const seg = this.pathSegment(address, TradeLayerApi.ADDRESS_RE);
-        if (seg === null) return this.invalidParam();
-        const path = `/addresses/${seg}/validate/`;
-        return this.get(path);
+        return this.get`/addresses/${ApiParam.address(address)}/validate/`;
     }
 
     getBalance(address: string): Observable<any> {
-        const seg = this.pathSegment(address, TradeLayerApi.ADDRESS_RE);
-        if (seg === null) return this.invalidParam();
-        const path = `/tl_getAllBalancesForAddress/${seg}`;
-        return this.get(path);
+        return this.get`/tl_getAllBalancesForAddress/${ApiParam.address(address)}`;
     }
 
     getUnvestedBalance(address: string): Observable<any> {
-        const seg = this.pathSegment(address, TradeLayerApi.ADDRESS_RE);
-        if (seg === null) return this.invalidParam();
-        const path = `/addresses/${seg}/unvested_balance`;
-        return this.get(path);
+        return this.get`/addresses/${ApiParam.address(address)}/unvested_balance`;
     }
 
     getProperties(): Observable<any> {
-        const path = '/tl_listproperties';
-        return this.get(path);
+        return this.get`/tl_listproperties`;
     }
 
-    getPropData(id: number): Observable<any>  {
-        const sid = this.safeId(id);
-        if (sid === null) return this.invalidParam();
-        const path = `/tl_getproperty/${sid}`;
-        return this.get(path);
+    getPropData(id: IdParam): Observable<any>  {
+        return this.get`/tl_getproperty/${ApiParam.id(id)}`;
     }
 
-    getPropCurrencyTotal(id: number): Observable<any>  {
-        const sid = this.safeId(id);
-        if (sid === null) return this.invalidParam();
-        const path = `/token/${sid}/currency_total`;
-        return this.get(path);
+    getPropCurrencyTotal(id: IdParam): Observable<any>  {
+        return this.get`/token/${ApiParam.id(id)}/currency_total`;
     }
 
-    getPropCache(id: number, cacheType: PropertyCacheType = PropertyCacheType.Total): Observable<any>  {
-        const sid = this.safeId(id);
-        if (sid === null) return this.invalidParam();
-        const path = `/tl_propertyFeeCache/${sid}`;  ///cache?cacheType=${cacheType}`;
-        return this.get(path);
+    getPropCache(id: IdParam, cacheType: PropertyCacheType = PropertyCacheType.Total): Observable<any>  {
+        return this.get`/tl_propertyFeeCache/${ApiParam.id(id)}`;  ///cache?cacheType=${cacheType}`;
     }
 
-    getPropVestingInfo(id: number) {
-        const sid = this.safeId(id);
-        if (sid === null) return this.invalidParam();
-        const path = `/token/${sid}/vesting_info`;
-        return this.get(path);
+    getPropVestingInfo(id: IdParam) {
+        return this.get`/token/${ApiParam.id(id)}/vesting_info`;
     }
 
-    getPropLtcVolume(id: number, startBlock: number, endBlock: number): Observable<any>  {
-        const sid = this.safeId(id);
-        const sStart = this.safeId(startBlock);
-        const sEnd = this.safeId(endBlock);
-        if (sid === null || sStart === null || sEnd === null) return this.invalidParam();
-        const path = `/token/${sid}/ltc_volume?startBlock=${sStart}&endBlock=${sEnd}`;
-        return this.get(path);
+    getPropLtcVolume(id: IdParam, startBlock: IdParam, endBlock: IdParam): Observable<any>  {
+        return this.get`/token/${ApiParam.id(id)}/ltc_volume?startBlock=${ApiParam.id(startBlock)}&endBlock=${ApiParam.id(endBlock)}`;
     }
 
-    getContract(id: number): Observable<any> {
-        const sid = this.safeId(id);
-        if (sid === null) return this.invalidParam();
-        const path = `/contracts/${sid}`;
-        return this.get(path);
+    getContract(id: IdParam): Observable<any> {
+        return this.get`/contracts/${ApiParam.id(id)}`;
     }
 
-    getContractOpenInterest(id: number): Observable<any> {
-        const sid = this.safeId(id);
-        if (sid === null) return this.invalidParam();
-        const path = `/contracts/${sid}/open_interest`;
-        return this.get(path);
+    getContractOpenInterest(id: IdParam): Observable<any> {
+        return this.get`/contracts/${ApiParam.id(id)}/open_interest`;
     }
-    getContractTradeHistory(id: number): Observable<any> {
-        const sid = this.safeId(id);
-        if (sid === null) return this.invalidParam();
-        const path = `/contracts/${sid}/trade_history`;
-        return this.get(path);
+    getContractTradeHistory(id: IdParam): Observable<any> {
+        return this.get`/contracts/${ApiParam.id(id)}/trade_history`;
     }
-    getContractTradeHistoryUnfiltered(id: number): Observable<any> {
-        const sid = this.safeId(id);
-        if (sid === null) return this.invalidParam();
-        const path = `/contracts/${sid}/trade_history_unfiltered`;
-        return this.get(path);
+    getContractTradeHistoryUnfiltered(id: IdParam): Observable<any> {
+        return this.get`/contracts/${ApiParam.id(id)}/trade_history_unfiltered`;
     }
-    
+
     getNativeContracts(): Observable<any> {
-        const path = '/contracts/natives';
-        return this.get(path);
+        return this.get`/contracts/natives`;
     }
 
     getOracleContracts(): Observable<any> {
-        const path = '/tl_listoracles';
-        return this.get(path);
+        return this.get`/tl_listoracles`;
     }
 
     getChainInfo(): Observable<any> {
-        const path = '/tl_getchaininfo';
-        return this.get(path);
+        return this.get`/tl_getchaininfo`;
     }
 
     getTop10Blocks(): Observable<any> {
         //return of(BLOCKS.map(b=>({ blockId: b.blockId, date: b.date.toISOString(), tx: b.tx.length })));
-        const path = '/tl_gettop10blocks';
-        return this.get(path);
+        return this.get`/tl_gettop10blocks`;
     }
 
     getTransaction(id: string): Observable<any> {
         //return of({});
-        const seg = this.pathSegment(id, TradeLayerApi.TXID_RE);
-        if (seg === null) return this.invalidParam();
-        const path = `/tl_gettransaction/${seg}`;
-        return this.get(path);
+        return this.get`/tl_gettransaction/${ApiParam.txid(id)}`;
     }
 
     getTransactionsForAddress(addr: string): Observable<any> {
         //return of(TXs.filter(x=>x.to == addr || x.from == addr));
-        const seg = this.pathSegment(addr, TradeLayerApi.ADDRESS_RE);
-        if (seg === null) return this.invalidParam();
-        const path = `/tl_gettransactionsforaddress/${seg}`;
-        return this.get(path);
+        return this.get`/tl_gettransactionsforaddress/${ApiParam.address(addr)}`;
     }
-    
-    getTransactionsForBlock(bid: number): Observable<any> {
+
+    getTransactionsForBlock(bid: IdParam): Observable<any> {
         // let b = BLOCKS.find(b=>b.blockId == bid)
         // return of(b?.tx);
-        const sbid = this.safeId(bid);
-        if (sbid === null) return this.invalidParam();
-        const path = `/tl_gettransactionsforblock/${sbid}`;
-        return this.get(path);
+        return this.get`/tl_gettransactionsforblock/${ApiParam.id(bid)}`;
     }
 
     private get apiUrl() {
         return environment.apiUrl;
     }
-    
-    private get(path: string) : Observable<any> {
+
+    // The only place an API URL is built. The literal parts come from this file.
+    // Every interpolated value must be an ApiParam: if one is invalid (or is not
+    // an ApiParam at all), the user goes to the error page and no request is sent.
+    private get(strings: TemplateStringsArray, ...params: ApiParam[]): Observable<any> {
+        let path = strings[0];
+        for (let i = 0; i < params.length; i++) {
+            const encoded: unknown = params[i]?.encoded;
+            if (typeof encoded !== 'string') {
+                return this.invalidParam();
+            }
+            path += encoded + strings[i + 1];
+        }
         const url = `${this.apiUrl}${path}`;
         return this.http.get(url)
             .pipe(
@@ -251,5 +222,15 @@ export class TradeLayerApi {
                     return EMPTY;
                 })
             );
+    }
+
+    private invalidParam(): Observable<never> {
+        // Navigate to the error page but emit nothing downstream: callers
+        // chain these observables into data pipelines, and emitting the
+        // navigation result (`true`) made tables briefly render `true` and
+        // chained lookups fire extra error navigations. See adversarial review.
+        this.router.navigate(['error'], {
+            queryParams: { message: 'Invalid lookup parameter' }});
+        return EMPTY;
     }
 }

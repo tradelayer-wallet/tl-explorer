@@ -17,13 +17,8 @@ export class ContractPageComponent implements OnInit {
     private contratService: ContractService) { }
 
   ngOnInit(): void {
-    // Route params are strings; convert explicitly with a strict digit gate
-    // so junk (`1.5`, `1e3`, `0x10`, `123abc`) can never normalize into a
-    // valid id. NaN is rejected downstream by the API's safeId guard.
-    const rawId = this.route.snapshot.params?.['contractId'];
-    const contractId = (typeof rawId === 'string' && /^\d{1,16}$/.test(rawId))
-      ? Number(rawId)
-      : Number.NaN;
+    // Passed through unparsed: TradeLayerApi validates route ids in one place.
+    const contractId = this.route.snapshot.params?.['contractId'];
     this.contract$ = this.contratService.getContract(contractId)
       .pipe(shareReplay(1));
     this.openInterest$ = this.contract$.pipe(
