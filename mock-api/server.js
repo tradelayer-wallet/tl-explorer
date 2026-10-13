@@ -1,10 +1,20 @@
 const http = require('http');
 const fs = require('fs');
+const path = require('path');
 
 const host = 'localhost';
 const port = 8000;
 
+const dataDir = path.resolve(__dirname, 'data');
+
 const cache = {};
+
+// Dev-only mock: the only legitimate cross-origin readers are Angular dev
+// servers on localhost (e.g. `ng serve` on http://localhost:4200). Echo the
+// request Origin only when it is http://localhost(:port); never send
+// Access-Control-Allow-Credentials, since this server is unauthenticated and
+// its data must not be readable in a credentialed cross-origin context.
+const LOCALHOST_ORIGIN = /^http:\/\/localhost(:\d+)?$/;
 
 const open = (filename) => {
   return new Promise((resolve, reject) => {
@@ -30,13 +40,22 @@ const readFile = (fd) => {
   });
 }
 
-const get = (path) => {
-  console.log(path);
-  let filename = __dirname + '/data' + path;
-  filename = filename.replace(/\?.*/gi, '');
+const get = (urlPath) => {
+  console.log(urlPath);
+  let cleanPath = urlPath.split('?')[0].split('#')[0];
 
-  if (!filename.endsWith('.json')) {
-    filename += '.json';
+  if (!cleanPath.endsWith('.json')) {
+    cleanPath += '.json';
+  }
+
+  // Resolve against the data dir and enforce containment, so requests like
+  // /../../../etc/passwd.json cannot escape into the rest of the filesystem.
+  const filename = path.resolve(dataDir, '.' + cleanPath);
+
+  if (!filename.startsWith(dataDir + path.sep)) {
+    const err = new Error('Forbidden');
+    err.statusCode = 403;
+    return Promise.reject(err);
   }
 
   if (cache[filename]) {
@@ -57,18 +76,23 @@ const get = (path) => {
 }
 const requestListener = function (req, res) {
   res.setHeader("Content-Type", "application/json");
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  if (origin && LOCALHOST_ORIGIN.test(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  const path = req.url;
+  const urlPath = req.url;
 
-  get(path)
+  get(urlPath)
     .then(fileContents => {
       res.writeHead(200);
       res.end(fileContents);
     }).catch(err => {
-      if(err.errno === -2) {
+      if (err.statusCode === 403) {
+        res.writeHead(403);
+      } else if(err.errno === -2) {
         res.writeHead(404);
       } else { 
         res.writeHead(500)
