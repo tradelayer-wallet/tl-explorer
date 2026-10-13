@@ -18,6 +18,11 @@ const cache = {};
 // its data must not be readable in a credentialed cross-origin context.
 const LOCALHOST_ORIGIN = /^http:\/\/localhost(:\d+)?$/;
 
+// DNS rebinding: a page on another domain that resolves to 127.0.0.1 can send
+// requests here with its own Host header, which the CORS check never sees.
+// Serving only requests whose Host names this machine closes that path.
+const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
+
 const forbidden = () => {
   const err = new Error('Forbidden');
   err.statusCode = 403;
@@ -62,6 +67,11 @@ const requestListener = function (req, res) {
   // The Access-Control-Allow-Origin value depends on Origin, so caches must key
   // on it for every response, not only for the responses that echo it.
   res.setHeader('Vary', 'Origin');
+  if (!LOCAL_HOST.test(req.headers.host || '')) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
   const origin = req.headers.origin;
   if (origin && LOCALHOST_ORIGIN.test(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);

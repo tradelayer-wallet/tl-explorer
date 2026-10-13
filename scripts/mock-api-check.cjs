@@ -86,7 +86,7 @@ const main = async () => {
     const ok = await request('/tokens');
     check('legit file is served (200, INSIDE)', ok.status === 200 && ok.body.includes('INSIDE'), `status ${ok.status}`);
 
-    for (const p of ['/../canary', '/../../canary', '/..%2Fcanary', '/%2e%2e/canary', '/%2e%2e%2fcanary', '/..%5ccanary']) {
+    for (const p of ['/../canary', '/../../canary', '/..%2Fcanary', '/%2e%2e/canary', '/%2e%2e%2fcanary', '/..%5ccanary', '/..;/canary', '/%2e%2e;/canary']) {
       const r = await request(p);
       check(`${p} does not serve the canary`, !leaked(r) && r.status !== 200, `status ${r.status}`);
     }
@@ -118,6 +118,14 @@ const main = async () => {
     check('Access-Control-Allow-Credentials is never sent', !anyCreds);
     const varies = [local, evil, noOrigin].every((r) => String(r.headers.vary || '').toLowerCase().includes('origin'));
     check('Vary: Origin is sent on every response (cache-safe)', varies, JSON.stringify([local.headers.vary, evil.headers.vary, noOrigin.headers.vary]));
+
+    console.log('--- host (DNS rebinding) ---');
+    const rebind = await request('/tokens', { Host: 'evil.example:8000' });
+    check('foreign Host is refused (403, no data)', rebind.status === 403 && !rebind.body.includes('INSIDE'), `status ${rebind.status}`);
+    const rebindOrigin = await request('/tokens', { Host: 'evil.example:8000', Origin: 'http://localhost:4200' });
+    check('foreign Host is refused even with a localhost Origin', rebindOrigin.status === 403 && !rebindOrigin.body.includes('INSIDE'), `status ${rebindOrigin.status}`);
+    const ip = await request('/tokens', { Host: '127.0.0.1:8000' });
+    check('127.0.0.1 Host is served', ip.status === 200, `status ${ip.status}`);
   } catch (err) {
     failures++;
     console.log(`FAIL  ${err.message}`);
