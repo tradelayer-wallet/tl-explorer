@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { environment } from "src/environments/environment";
 import { HttpClient } from "@angular/common/http";
-import { catchError, from, map, Observable, of } from "rxjs";
+import { catchError, EMPTY, map, Observable, of } from "rxjs";
 import { Router } from "@angular/router";
 
 export enum PropertyCacheType {
@@ -53,22 +53,41 @@ export class TradeLayerApi {
     // base58 (legacy) / bech32 (segwit) addresses are strictly alphanumeric;
     // this charset excludes `/`, `.`, `?`, `#` and `%` regardless of format.
     private static readonly ADDRESS_RE = /^[A-Za-z0-9]{10,120}$/;
+    // Route params arrive as strings (`'123'`), so ids accept a canonical
+    // non-negative decimal integer form only (no sign, decimal point, hex or
+    // exponent notation). 16 digits is the widest a Number can represent;
+    // the safe-integer check below rejects the exact unsafe tail.
+    private static readonly ID_RE = /^\d{1,16}$/;
 
     constructor(
         private http: HttpClient,
         private router: Router,
     ) {}
 
-    private invalidParam(): Observable<any> {
-        return from(this.router.navigate(['error'], {
-            queryParams: { message: 'Invalid lookup parameter' }}));
+    private invalidParam(): Observable<never> {
+        // Navigate to the error page but emit nothing downstream: callers
+        // chain these observables into data pipelines, and emitting the
+        // navigation result (`true`) made tables briefly render `true` and
+        // chained lookups fire extra error navigations. See adversarial review.
+        this.router.navigate(['error'], {
+            queryParams: { message: 'Invalid lookup parameter' }});
+        return EMPTY;
     }
 
     private pathSegment(value: string, pattern: RegExp): string | null {
         return (typeof value === 'string' && pattern.test(value)) ? encodeURIComponent(value) : null;
     }
 
-    private safeId(id: number): string | null {
+    private safeId(id: number | string): string | null {
+        // Accept numeric strings as well as numbers: route params are strings
+        // (`/contracts/123` -> `'123'`) and the old number-only check rejected
+        // every route-driven lookup. Only the canonical digit form above is
+        // accepted, so `'1.5'`, `'1e3'`, `'0x10'`, `''` and friends are out;
+        // `Number()` normalization then trims leading zeros (`'007'` -> `7`).
+        if (typeof id === 'string') {
+            if (!TradeLayerApi.ID_RE.test(id)) return null;
+            id = Number(id);
+        }
         return (Number.isSafeInteger(id) && id >= 0) ? String(id) : null;
     }
 
@@ -225,8 +244,11 @@ export class TradeLayerApi {
                 catchError((error) => {
                     console.log(error);
                     const message = error?.message || error;
-                    return this.router.navigate(['error'], {
+                    // Same contract as invalidParam(): navigate to the error
+                    // page and complete without emitting the navigation result.
+                    this.router.navigate(['error'], {
                         queryParams: { message }});
+                    return EMPTY;
                 })
             );
     }
