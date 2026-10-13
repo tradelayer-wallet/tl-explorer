@@ -27,6 +27,10 @@ export class PossibleLinkComponent implements OnInit {
 
   public isExternal: boolean = false;
 
+  // Safe, fully-validated href for external links (null = do not render a
+  // link). Built in TS so the template never concatenates raw on-chain data.
+  public externalHref: string | null = null;
+
   public link: string[]=[];
 
   ngOnInit(): void {
@@ -40,9 +44,34 @@ export class PossibleLinkComponent implements OnInit {
     const propertyType: PROPERTY_TYPES = PropertyToPropertyType[this.key];
     this.isExternal = propertyType === 'url';
     if (this.isExternal) {
+      this.externalHref = PossibleLinkComponent.buildExternalHref(this.value);
       return;
     }
 
     this.link = getLinkFromPropertyName(this.key, this.value);
+  }
+
+  // The value comes from attacker-controllable on-chain metadata. The old
+  // template gate `value.startsWith('http')` accepted junk schemes like
+  // `httpfoo:` and threw on non-string values. Parse with the URL API and
+  // allowlist http/https only. See security review #9 (M1).
+  private static buildExternalHref(value: unknown): string | null {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    try {
+      const url = new URL(candidate);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+        return null;
+      }
+      return url.href;
+    } catch {
+      return null;
+    }
   }
 }
