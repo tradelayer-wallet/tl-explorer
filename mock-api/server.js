@@ -90,14 +90,19 @@ const requestListener = function (req, res) {
       res.writeHead(200);
       res.end(fileContents);
     }).catch(err => {
+      // Generic bodies only: err.message for fs errors embeds the absolute
+      // server path (e.g. "ENOENT: no such file or directory, open
+      // '/home/.../mock-api/data/x.json'") and must never reach the client.
       if (err.statusCode === 403) {
         res.writeHead(403);
+        res.end('Forbidden');
       } else if(err.errno === -2) {
         res.writeHead(404);
+        res.end('Not found');
       } else { 
         res.writeHead(500)
+        res.end('Internal server error');
       }
-      res.end(err.message);
     })
 };
 
