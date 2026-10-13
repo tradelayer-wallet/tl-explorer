@@ -46,9 +46,10 @@ const BLOCKS: Block[] = Array.from(Array(10)).map((n,i)=>(
 // GET requests to unrelated endpoints on the RPC proxy (security review H3).
 //
 // Every API path is built by TradeLayerApi.get(), a tagged template whose
-// interpolations must be ApiParam values. ApiParam can only be created by the
-// validating factories below, so a raw string cannot reach the URL: it is a
-// type error at compile time, and get() also refuses it at runtime.
+// interpolations must be ApiParam values. A raw string is a type error. An
+// object literal shaped like ApiParam is a type error too, because the class has
+// a private member. get() also refuses at runtime anything that the factories
+// did not create, so an `as unknown as ApiParam` cast cannot reach the URL.
 const TXID_RE = /^[0-9a-fA-F]{64}$/;
 // base58 (legacy) and bech32 (segwit) addresses are alphanumeric. This charset
 // excludes `/`, `.`, `?`, `#`, `%` and whitespace, so encoding is a no-op.
@@ -62,20 +63,38 @@ const ID_RE = /^\d{1,16}$/;
 export type IdParam = number | string;
 
 class ApiParam {
-    // Only the static factories create instances, so a non-null `encoded` has
-    // always passed its validator. Plain objects and raw strings lack it.
-    private constructor(readonly encoded: string | null) {}
+    // The private member makes the type nominal: an object literal with the
+    // same shape is not assignable to ApiParam.
+    private constructor(private readonly encoded: string | null) {}
+
+    // Every instance the factories create is recorded here. segment() accepts
+    // only these, so a runtime forgery (Object.create, a double cast) is refused.
+    private static readonly issued = new WeakSet<ApiParam>();
+
+    private static create(encoded: string | null): ApiParam {
+        const param = new ApiParam(encoded);
+        ApiParam.issued.add(param);
+        return param;
+    }
+
+    // The encoded path segment, or null unless `param` came from a factory and
+    // its validator accepted the input.
+    static segment(param: unknown): string | null {
+        return (param instanceof ApiParam && ApiParam.issued.has(param))
+            ? param.encoded
+            : null;
+    }
 
     static txid(value: unknown): ApiParam {
-        return new ApiParam(ApiParam.match(value, TXID_RE));
+        return ApiParam.create(ApiParam.match(value, TXID_RE));
     }
 
     static address(value: unknown): ApiParam {
-        return new ApiParam(ApiParam.match(value, ADDRESS_RE));
+        return ApiParam.create(ApiParam.match(value, ADDRESS_RE));
     }
 
     static id(value: unknown): ApiParam {
-        return new ApiParam(ApiParam.canonicalId(value));
+        return ApiParam.create(ApiParam.canonicalId(value));
     }
 
     private static match(value: unknown, pattern: RegExp): string | null {
@@ -196,8 +215,8 @@ export class TradeLayerApi {
     private get(strings: TemplateStringsArray, ...params: ApiParam[]): Observable<any> {
         let path = strings[0];
         for (let i = 0; i < params.length; i++) {
-            const encoded: unknown = params[i]?.encoded;
-            if (typeof encoded !== 'string') {
+            const encoded = ApiParam.segment(params[i]);
+            if (encoded === null) {
                 return this.invalidParam();
             }
             path += encoded + strings[i + 1];

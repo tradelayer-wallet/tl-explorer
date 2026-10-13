@@ -43,10 +43,19 @@ export const TypeToHandler: {
   transaction: (value: string) => ['/', 'tx', value],
   contract: (value: string) => ['/', 'contracts', value],
   property: (value: string) => ['/', 'properties', value],
-  url: (value: string) => ['/', value]
+  // Never a router link: URLs go through safeExternalHref() as an href instead.
+  // A router path built from on-chain text would be an in-app navigation sink.
+  url: (_value: string) => []
 };
 
 export const PropertyToPropertyType: { [key: string]: PROPERTY_TYPES; } = {};
+
+// Own keys only: a plain object would otherwise answer for inherited names such
+// as `constructor` or `__proto__`.
+export const propertyTypeOf = (key: string): PROPERTY_TYPES | undefined =>
+  Object.prototype.hasOwnProperty.call(PropertyToPropertyType, key)
+    ? PropertyToPropertyType[key]
+    : undefined;
 
 Object.entries(PropertyTypeToProperties)
   .forEach(([propertyType, property]: [string, string[]]) => {
@@ -58,8 +67,7 @@ Object.entries(PropertyTypeToProperties)
 const noLink: LinkFunction = function() {return []}
 
 export const getLinkFromPropertyName = (propertyName: string, value: string): string[] => {
-  let propertyType = PropertyToPropertyType[propertyName];
-  return getLinkFromPropertyType(propertyType, value);
+  return getLinkFromPropertyType(propertyTypeOf(propertyName) ?? '', value);
 }
 
 export const getLinkFromPropertyType = (propertyType: string, value: string): string[] => {
@@ -73,6 +81,5 @@ export const getLinkFromPropertyType = (propertyType: string, value: string): st
 }
 
 export const isLinkable = (key: string): boolean => {
-  const propertyType: PROPERTY_TYPES = PropertyToPropertyType[key];
-  return !!propertyType;
+  return propertyTypeOf(key) !== undefined;
 }

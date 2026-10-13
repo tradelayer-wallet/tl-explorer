@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { PROPERTY_TYPES, PropertyToPropertyType, isLinkable, getLinkFromPropertyName } from '../property-types';
+import { isLinkable, getLinkFromPropertyName, propertyTypeOf } from '../property-types';
 import { safeExternalHref } from 'src/app/@core/safe-link';
 
 @Component({
@@ -58,8 +58,7 @@ export class PossibleLinkComponent implements OnChanges {
       return;
     }
 
-    const propertyType: PROPERTY_TYPES = PropertyToPropertyType[this.key];
-    this.isExternal = propertyType === 'url';
+    this.isExternal = propertyTypeOf(this.key) === 'url';
     if (this.isExternal) {
       this.externalHref = safeExternalHref(this.value);
       return;

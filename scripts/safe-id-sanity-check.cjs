@@ -180,6 +180,13 @@ expectRejected('get() with raw string interpolation', () =>
   api.get(['/tl_gettransaction/', ''], '../../some_other_endpoint'));
 expectRejected('get() with raw string containing a query', () =>
   api.get(['/token/', '/vesting_info'], '1?x=../..'));
+// Shape-compatible objects are what a forged ApiParam would look like at runtime.
+expectRejected('get() with a plain object shaped like ApiParam', () =>
+  api.get(['/tl_gettransaction/', ''], { encoded: '../../some_other_endpoint' }));
+expectRejected('get() with an Object.create(prototype) forgery', () =>
+  api.get(['/tl_gettransaction/', ''], Object.create(Object.prototype, { encoded: { value: '../../x' } })));
+expectRejected('get() with a null-encoded object', () =>
+  api.get(['/tl_gettransaction/', ''], { encoded: null }));
 
 console.log('--- static endpoints are unchanged ---');
 expectUrl('getTop10Blocks()', () => api.getTop10Blocks(), '/tl_gettop10blocks');
@@ -222,17 +229,33 @@ if (typeof safeExternalHref !== 'function') {
   check('bare host gets https', href('example.com'), 'https://example.com/');
   check('whitespace trimmed', href('  https://example.com  '), 'https://example.com/');
   check('uppercase scheme', href('HTTPS://EXAMPLE.COM'), 'https://example.com/');
-  check('protocol-relative becomes https', href('//example.com'), 'https://example.com/');
+  check('protocol-relative is refused', href('//example.com'), null);
+  check('bare dotted host with port', href('example.com:8080'), 'https://example.com:8080/');
+  check('single-label host refused', href('localhost'), null);
+  check('backslash userinfo confusion (target is the trailing host)', href('https://evil.example\\@good.com'), null);
+  check('backslash after host', href('https://good.com\\@evil.example'), null);
+  check('backslash scheme slashes', href('https:\\\\evil.example'), null);
+  check('empty userinfo with @ in authority', href('https://:@evil.example'), null);
+  check('IDN / Cyrillic homograph refused (display would differ from target)', href('https://g\u043eogle.com'), null);
+  check('punycode input allowed (display equals target)', href('https://xn--ggle-0nda.com'), 'https://xn--ggle-0nda.com/');
+  check('embedded tab refused (URL parser would strip it)', href('https://goo\tgle.com'), null);
+  check('zero-width space refused', href('https://goo\u200bgle.com'), null);
+  check('NUL refused', href('https://example.com\u0000'), null);
+  check('ftp:// refused (was https://ftp//example.com)', href('ftp://example.com'), null);
+  check('javascript:0 refused (was https://javascript:0/)', href('javascript:0'), null);
+  check('2049-char URL refused', href('https://example.com/' + 'a'.repeat(2030)), null);
+  check('2048-char URL allowed', href('https://example.com/' + 'a'.repeat(2028)).length, 2048);
+  check('@ in path is fine (display equals target)', href('https://x.com/@user'), 'https://x.com/@user');
   check('javascript:', href('javascript:alert(1)'), null);
   check('JaVaScRiPt: mixed case', href('JaVaScRiPt:alert(1)'), null);
   check('javascript: with tab inside', href('java\tscript:alert(1)'), null);
   check('javascript: with newline inside', href('java\nscript:alert(1)'), null);
-  check('javascript:1 becomes an https host, never a javascript URL', href('javascript:1'), 'https://javascript:1/');
+  check('javascript:1 is refused (a bare value needs a dotted host)', href('javascript:1'), null);
   check('data: URL', href('data:text/html,<script>alert(1)</script>'), null);
   check('vbscript:', href('vbscript:msgbox(1)'), null);
   // Without a scheme the value is read as a host, so this becomes an https link
   // to host 'file'; the point is that no file: or other non-web scheme comes out.
-  check('file:/// never yields a non-https link', (href('file:///etc/passwd') || 'https://').startsWith('https://'), true);
+  check('file:///etc/passwd refused', href('file:///etc/passwd'), null);
   check('httpfoo:bar (old startsWith gate accepted it)', href('httpfoo:bar'), null);
   check('credentials rejected (user:pass)', href('https://user:pass@example.com'), null);
   check('credentials rejected (display/target mismatch)', href('https://paypal.com@evil.example'), null);
