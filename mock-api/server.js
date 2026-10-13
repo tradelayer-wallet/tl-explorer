@@ -6,6 +6,8 @@ const host = 'localhost';
 const port = 8000;
 
 const dataDir = path.resolve(__dirname, 'data');
+// Symlinks inside data/ are resolved before the containment check (see get()).
+const realDataDir = fs.realpathSync(dataDir);
 
 const cache = {};
 
@@ -16,31 +18,13 @@ const cache = {};
 // its data must not be readable in a credentialed cross-origin context.
 const LOCALHOST_ORIGIN = /^http:\/\/localhost(:\d+)?$/;
 
-const open = (filename) => {
-  return new Promise((resolve, reject) => {
-    fs.open(filename, (err, fd) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(fd);
-    });
-  });
-}
+const forbidden = () => {
+  const err = new Error('Forbidden');
+  err.statusCode = 403;
+  return err;
+};
 
-const readFile = (fd) => {
-  return new Promise((resolve, reject) => {
-    fs.readFile(fd, (err, data) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(data);
-    });
-  });
-}
-
-const get = (urlPath) => {
+const get = async (urlPath) => {
   console.log(urlPath);
   let cleanPath = urlPath.split('?')[0].split('#')[0];
 
@@ -48,38 +32,39 @@ const get = (urlPath) => {
     cleanPath += '.json';
   }
 
-  // Resolve against the data dir and enforce containment, so requests like
-  // /../../../etc/passwd.json cannot escape into the rest of the filesystem.
+  // Two containment checks, both required. The lexical one rejects ../ before
+  // touching the disk. The real-path one rejects symlinks inside data/ that
+  // point elsewhere, since path.resolve does not follow links.
   const filename = path.resolve(dataDir, '.' + cleanPath);
-
   if (!filename.startsWith(dataDir + path.sep)) {
-    const err = new Error('Forbidden');
-    err.statusCode = 403;
-    return Promise.reject(err);
+    throw forbidden();
+  }
+  // A missing file fails here with ENOENT and is answered with 404.
+  const realFile = await fs.promises.realpath(filename);
+  if (!realFile.startsWith(realDataDir + path.sep)) {
+    throw forbidden();
   }
 
-  if (cache[filename]) {
-    console.log('Hitting cache for:', filename);
-    return Promise.resolve(cache[filename]);
+  if (cache[realFile]) {
+    console.log('Hitting cache for:', realFile);
+    return cache[realFile];
   }
 
-  return open(filename)
-    .then((fd) => {
-      console.log('Loading for: ', filename);
-      return readFile(fd);
-    })
-    .then(data => {
-      console.log('Putting to cache for: ', filename);
-      cache[filename] = data;
-      return data;
-    });
-}
+  console.log('Loading for: ', realFile);
+  const data = await fs.promises.readFile(realFile);
+  console.log('Putting to cache for: ', realFile);
+  cache[realFile] = data;
+  return data;
+};
+
 const requestListener = function (req, res) {
   res.setHeader("Content-Type", "application/json");
+  // The Access-Control-Allow-Origin value depends on Origin, so caches must key
+  // on it for every response, not only for the responses that echo it.
+  res.setHeader('Vary', 'Origin');
   const origin = req.headers.origin;
   if (origin && LOCALHOST_ORIGIN.test(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -96,7 +81,7 @@ const requestListener = function (req, res) {
       if (err.statusCode === 403) {
         res.writeHead(403);
         res.end('Forbidden');
-      } else if(err.errno === -2) {
+      } else if (err.code === 'ENOENT' || err.code === 'ENOTDIR') {
         res.writeHead(404);
         res.end('Not found');
       } else { 
