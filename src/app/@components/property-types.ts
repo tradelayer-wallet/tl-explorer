@@ -70,14 +70,28 @@ export const getLinkFromPropertyName = (propertyName: string, value: string): st
   return getLinkFromPropertyType(propertyTypeOf(propertyName) ?? '', value);
 }
 
-export const getLinkFromPropertyType = (propertyType: string, value: string): string[] => {
-  let linker: LinkFunction = noLink;
+// The shape each link target accepts. A value outside it is not linked: the value
+// goes into a router path, and Angular resolves `..` and `/` inside it, so an
+// unchecked value could steer a link to another page while its text says otherwise.
+const VALUE_FORMAT: { [key in PROPERTY_TYPES]: RegExp | null } = {
+  blocks: /^\d{1,16}$/,
+  address: /^[A-Za-z0-9]{10,120}$/,
+  contract: /^\d{1,16}$/,
+  url: null,
+  transaction: /^[0-9a-fA-F]{64}$/,
+  property: /^\d{1,16}$/,
+};
 
-  if(isPropertyType(propertyType)) {
-    linker = TypeToHandler[propertyType];
+export const getLinkFromPropertyType = (propertyType: string, value: string | number): string[] => {
+  if (!isPropertyType(propertyType)) {
+    return noLink(String(value));
   }
-
-  return linker(value);
+  const format = VALUE_FORMAT[propertyType];
+  const text = typeof value === 'number' ? String(value) : value;
+  if (!format || typeof text !== 'string' || !format.test(text)) {
+    return [];
+  }
+  return TypeToHandler[propertyType](text);
 }
 
 export const isLinkable = (key: string): boolean => {

@@ -236,11 +236,9 @@ export class TradeLayerApi {
                 map(x=>x),
                 catchError((error) => {
                     console.log(error);
-                    const message = error?.message || error;
                     // Same contract as invalidParam(): navigate to the error
                     // page and complete without emitting the navigation result.
-                    this.router.navigate(['error'], {
-                        queryParams: { message }});
+                    this.navigateToError(String(error?.message || error));
                     return EMPTY;
                 })
             );
@@ -251,8 +249,13 @@ export class TradeLayerApi {
         // chain these observables into data pipelines, and emitting the
         // navigation result (`true`) made tables briefly render `true` and
         // chained lookups fire extra error navigations. See adversarial review.
-        this.router.navigate(['error'], {
-            queryParams: { message: 'Invalid lookup parameter' }});
+        this.navigateToError('Invalid lookup parameter');
         return EMPTY;
+    }
+
+    // The message travels in navigation state. A query parameter would let any link
+    // put text on the explorer's own page (`/error?message=...`).
+    private navigateToError(message: string): void {
+        this.router.navigate(['error'], { state: { message: message.slice(0, 300) } });
     }
 }

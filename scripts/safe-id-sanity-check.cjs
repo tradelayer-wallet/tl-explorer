@@ -292,5 +292,86 @@ if (typeof safeExternalHref !== 'function') {
   check('array', href(['https://example.com']), null);
 }
 
+// ---------------------------------------------------------------------------
+// Round 8: the error message travels in navigation state, never in the URL, and a
+// link's value must have the shape of its target before a router path is built.
+// ---------------------------------------------------------------------------
+
+console.log('--- error message travels in navigation state, not in the URL ---');
+{
+  const prev = httpResponse;
+  httpResponse = () => throwError(() => ({ message: 'boom' }));
+  run(() => api.getTransaction(TXID));
+  httpResponse = prev;
+  const apiError = navigations[navigations.length - 1];
+  check('API error: no query parameters on the error navigation', apiError.extras.queryParams === undefined, true);
+  check('API error: message is in navigation state', apiError.extras.state?.message, 'boom');
+
+  run(() => api.getBalance('../x'));
+  const invalid = navigations[navigations.length - 1];
+  check('invalid param: message is in navigation state', invalid.extras.state?.message, 'Invalid lookup parameter');
+}
+
+console.log('--- the error page shows only a message the app set in navigation state ---');
+{
+  const errorPagePath = path.join(repoRoot, 'src/app/@pages/error-page/error-page.component.ts');
+  const realHistory = globalThis.history;
+  const pageMessage = (historyState, route) => {
+    globalThis.history = { state: historyState };
+    try {
+      const { ErrorPageComponent } = loadTs(errorPagePath, {
+        '@angular/core': { Component: () => (target) => target },
+      });
+      const c = new ErrorPageComponent(route);
+      c.ngOnInit();
+      return c.message;
+    } catch (e) {
+      return `THREW: ${e.message}`;
+    } finally {
+      globalThis.history = realHistory;
+    }
+  };
+  const GENERIC = 'An unexpected error occurred.';
+  check('error page: the app-set message is shown', pageMessage({ message: 'Invalid lookup parameter' }), 'Invalid lookup parameter');
+  check('error page: no navigation state -> generic message', pageMessage(null), GENERIC);
+  check('error page: non-string state is ignored', pageMessage({ message: { x: 1 } }), GENERIC);
+  check('error page: a URL query message is ignored',
+    pageMessage(null, { snapshot: { queryParams: { message: 'Your wallet is locked, call 555-0100' } } }), GENERIC);
+}
+
+console.log('--- the production page carries a script policy that admits only same-origin scripts ---');
+{
+  // The production build has no inline script (its three scripts are external modules), so
+  // the policy admits 'self' alone. Any inline or eval'd script is then blocked by the browser.
+  const html = fs.readFileSync(path.join(repoRoot, 'src/index.html'), 'utf8');
+  const csp = /http-equiv="Content-Security-Policy"\s+content="([^"]*)"/i.exec(html);
+  const directives = new Map();
+  if (csp) {
+    for (const part of csp[1].split(';')) {
+      const [name, ...values] = part.trim().split(/\s+/);
+      if (name) directives.set(name.toLowerCase(), values.join(' '));
+    }
+  }
+  check('CSP is present in index.html', Boolean(csp), true);
+  check("script-src is 'self' only", directives.get('script-src'), "'self'");
+  check("object-src is 'none'", directives.get('object-src'), "'none'");
+  check("base-uri is 'self'", directives.get('base-uri'), "'self'");
+}
+
+console.log('--- a link value must have the shape of its target ---');
+{
+  const pt = loadTs(path.join(repoRoot, 'src/app/@components/property-types.ts'), {});
+  check('address link for a valid address', pt.getLinkFromPropertyType('address', ADDR), ['/', 'addresses', ADDR]);
+  check('address value with a path escape is not linked', pt.getLinkFromPropertyType('address', `../tx/${TXID}`), []);
+  check('transaction link for a txid', pt.getLinkFromPropertyType('transaction', TXID), ['/', 'tx', TXID]);
+  check('transaction value with a slash is not linked', pt.getLinkFromPropertyType('transaction', `${'a'.repeat(63)}/`), []);
+  check('block id given as a number is linked as its digits', pt.getLinkFromPropertyType('blocks', 834692), ['/', 'blocks', '834692']);
+  check('block id with a dot-dot segment is not linked', pt.getLinkFromPropertyType('blocks', '../1'), []);
+  check('property id is linked', pt.getLinkFromPropertyType('property', '31'), ['/', 'properties', '31']);
+  check('a url value never becomes a router link', pt.getLinkFromPropertyType('url', 'https://example.com'), []);
+  check('an unknown property type yields no link', pt.getLinkFromPropertyType('bogus', ADDR), []);
+  check('a key that names an inherited member is not linkable', pt.isLinkable('constructor'), false);
+}
+
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);
