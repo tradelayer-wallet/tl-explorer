@@ -73,6 +73,9 @@ class ApiParam {
 
     private static create(encoded: string | null): ApiParam {
         const param = new ApiParam(encoded);
+        // Frozen so that code holding an issued value cannot rewrite its encoded
+        // segment at runtime (defineProperty on the instance now throws).
+        Object.freeze(param);
         ApiParam.issued.add(param);
         return param;
     }

@@ -266,6 +266,24 @@ if (typeof safeExternalHref !== 'function') {
   check('credentials rejected (display/target mismatch)', href('https://paypal.com@evil.example'), null);
   check('space in host', href('https://exa mple.com'), null);
   check('broken IPv6', href('https://[::1'), null);
+  // Round 6 / F-B1: loopback, private, link-local and unspecified literals are refused.
+  // Before this round each of these was accepted as an external link.
+  check('loopback name with port refused (http://localhost:8000)', href('http://localhost:8000/'), null);
+  check('IPv4 loopback refused', href('http://127.0.0.1/'), null);
+  check('IPv6 loopback refused', href('https://[::1]/'), null);
+  check('IPv6 loopback with port refused', href('https://[::1]:8080/x'), null);
+  check('IPv6 unspecified refused', href('https://[::]/'), null);
+  check('IPv4-mapped loopback refused', href('https://[::ffff:127.0.0.1]/'), null);
+  check('IPv4 private 192.168 refused (router admin pages)', href('http://192.168.0.1/'), null);
+  check('IPv4 private 10/8 refused', href('https://10.1.2.3/'), null);
+  check('IPv4 private 172.16/12 refused', href('https://172.16.5.5/'), null);
+  check('IPv4 link-local / metadata refused', href('http://169.254.169.254/latest/meta-data'), null);
+  check('IPv6 link-local refused', href('https://[fe80::1]/'), null);
+  check('IPv6 unique-local refused', href('https://[fd12:3456::1]/'), null);
+  check('.localhost name refused', href('https://app.localhost/'), null);
+  check('public IPv4 still allowed', href('https://8.8.8.8/'), 'https://8.8.8.8/');
+  check('172.32/16 is public and allowed', href('https://172.32.0.1/'), 'https://172.32.0.1/');
+  check('public IPv6 still allowed', href('https://[2001:4860:4860::8888]/'), 'https://[2001:4860:4860::8888]/');
   check('empty', href(''), null);
   check('whitespace only', href('   '), null);
   check('number', href(12), null);
