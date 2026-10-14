@@ -341,8 +341,11 @@ console.log('--- the error page shows only a message the app set in navigation s
 
 console.log('--- the production page carries a script policy that admits only same-origin scripts ---');
 {
-  // The production build has no inline script (its three scripts are external modules), so
-  // the policy admits 'self' alone. Any inline or eval'd script is then blocked by the browser.
+  // The production build's three scripts are external modules. Its one inline script is the onload
+  // handler Angular's inline-critical CSS puts on the first stylesheet link (media print -> all). The
+  // policy admits exactly that handler text by hash ('unsafe-hashes' is what lets a hash match an
+  // event-handler attribute). Any other inline script, and any eval, is blocked by the browser.
+  const handlerHash = `'sha256-${require('crypto').createHash('sha256').update("this.media='all'").digest('base64')}'`;
   const html = fs.readFileSync(path.join(repoRoot, 'src/index.html'), 'utf8');
   const csp = /http-equiv="Content-Security-Policy"\s+content="([^"]*)"/i.exec(html);
   const directives = new Map();
@@ -353,7 +356,7 @@ console.log('--- the production page carries a script policy that admits only sa
     }
   }
   check('CSP is present in index.html', Boolean(csp), true);
-  check("script-src is 'self' only", directives.get('script-src'), "'self'");
+  check("script-src is 'self' plus the one build handler hash", directives.get('script-src'), `'self' ${handlerHash} 'unsafe-hashes'`);
   check("object-src is 'none'", directives.get('object-src'), "'none'");
   check("base-uri is 'self'", directives.get('base-uri'), "'self'");
 }
