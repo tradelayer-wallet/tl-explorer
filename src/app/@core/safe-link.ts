@@ -47,5 +47,13 @@ export function safeExternalHref(value: unknown): string | null {
   if (url.username || url.password) {
     return null;
   }
+  // The host the user reads must be the host the browser opens. WHATWG
+  // decodes percent-escapes in hosts (`%65vil.com`) and turns numeric forms
+  // into dotted IPv4 (`0x7f.1`, `2130706433`), and it accepts an empty host
+  // (`https:///x.com`). Each of those changes the target away from the text.
+  const hostText = authority.replace(/:\d*$/, '').toLowerCase();
+  if (!hostText || url.hostname !== hostText) {
+    return null;
+  }
   return url.href;
 }

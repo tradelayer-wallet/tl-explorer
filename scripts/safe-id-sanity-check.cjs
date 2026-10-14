@@ -238,6 +238,11 @@ if (typeof safeExternalHref !== 'function') {
   check('empty userinfo with @ in authority', href('https://:@evil.example'), null);
   check('IDN / Cyrillic homograph refused (display would differ from target)', href('https://g\u043eogle.com'), null);
   check('punycode input allowed (display equals target)', href('https://xn--ggle-0nda.com'), 'https://xn--ggle-0nda.com/');
+  check('percent-encoded host refused (text %65vil.com, target evil.com)', href('https://%65vil.com'), null);
+  check('numeric IPv4 host refused (text 0x7f.1, target 127.0.0.1)', href('https://0x7f.1/'), null);
+  check('decimal IPv4 host refused (text 2130706433)', href('https://2130706433/'), null);
+  check('empty host refused (https:///x.com)', href('https:///evil.example'), null);
+  check('explicit port still allowed', href('https://example.com:8443/x'), 'https://example.com:8443/x');
   check('embedded tab refused (URL parser would strip it)', href('https://goo\tgle.com'), null);
   check('zero-width space refused', href('https://goo\u200bgle.com'), null);
   check('NUL refused', href('https://example.com\u0000'), null);
