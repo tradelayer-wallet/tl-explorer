@@ -3,14 +3,14 @@
   <table class="simple-table"  *ngIf="collection.length; else noProperties">
     <thead>
       <tr>
-          <td *ngFor="let cell of collection | headers">{{ cell  || "-"  }}</td>
+          <td *ngFor="let cell of collection | headers">{{ cell | dash }}</td>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let row of collection | entries" [routerLink]="link(row[0][1])">
           <td *ngFor="let cell of row">
               <tl-possible-link [key]="cell[0]" [value]="cell[1]">
-                {{ cell[1] || '-'}}
+                {{ cell[1] | dash }}
               </tl-possible-link>
           </td>
       </tr>

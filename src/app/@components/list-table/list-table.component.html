@@ -3,7 +3,7 @@
   <table class="simple-table" *ngIf="collection.length; else noData">
     <tbody>
       <tr *ngFor="let row of collection">
-          <td [routerLink]="link(row)">{{ row  || "-"  }}</td>
+          <td [routerLink]="link(row)">{{ row | dash }}</td>
       </tr>
     </tbody>
   </table>

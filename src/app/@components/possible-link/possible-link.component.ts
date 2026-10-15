@@ -1,6 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { isLinkable, getLinkFromPropertyName, propertyTypeOf } from '../property-types';
 import { safeExternalHref } from 'src/app/@core/safe-link';
+import { isBlank } from 'src/app/@utils/pipes';
 
 @Component({
   selector: 'tl-possible-link',
@@ -51,7 +52,7 @@ export class PossibleLinkComponent implements OnChanges {
     this.isExternal = false;
     this.externalHref = null;
     this.link = [];
-    if (!this.value) {
+    if (isBlank(this.value)) {
       return;
     }
     if (!isLinkable(this.key)) {

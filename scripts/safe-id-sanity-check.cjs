@@ -420,7 +420,18 @@ const sharedStubs = {
   },
   '../property-types': loadTs(propertyTypesPath, { 'src/app/@core/lookup-value': lookupModule }),
   'src/app/@core/safe-link': loadTs(safeLinkPath, {}),
+  'src/app/@utils/pipes': loadTs(path.join(repoRoot, 'src/app/@utils/pipes.ts'), {
+    '@angular/core': { Pipe: () => (target) => target },
+  }),
 };
+
+// Every source template and class under src/, as repo-relative paths and text.
+const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+  e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]);
+const sourceFiles = walk(path.join(repoRoot, 'src')).filter((f) => /\.(ts|html)$/.test(f))
+  .map((f) => ({ rel: path.relative(repoRoot, f), text: fs.readFileSync(f, 'utf8') }));
+const filesMatching = (re) => sourceFiles.filter((f) => re.test(f.text)).map((f) => f.rel).sort();
+
 
 console.log('--- search box: a query routes to a transaction, block or address page ---');
 {
@@ -479,7 +490,7 @@ console.log('--- link components: values and stale state ---');
   list.linkType = 'address';
   check('list-table: valid address value links', list.link(ADDR), ['/', 'addresses', ADDR]);
   check('list-table: non-address value does not link', list.link('../x'), []);
-  check('list-table: empty value link (current)', list.link(''), ['']);
+  check('list-table: empty value does not link', list.link(''), []);
 
   const { CollectionTableComponent } = loadTs(path.join(repoRoot, 'src/app/@components/collection-table/collection-table.component.ts'), sharedStubs);
   const coll = new CollectionTableComponent();
@@ -503,21 +514,42 @@ console.log('--- link components: values and stale state ---');
   pl.key = 'propertyid';
   pl.value = 0;
   pl.ngOnChanges({ key: {}, value: {} });
-  check('possible-link: numeric zero is not linked (current)', pl.link, []);
+  check('possible-link: numeric zero links to its property', pl.link, ['/', 'properties', '0']);
+  pl.value = '';
+  pl.ngOnChanges({ value: {} });
+  check('possible-link: empty value has no link', pl.link, []);
 }
 
 console.log('--- one element writes external hrefs; one module calls HttpClient ---');
 {
-  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
-    e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]);
-  const files = walk(path.join(repoRoot, 'src')).filter((f) => /\.(ts|html)$/.test(f))
-    .map((f) => ({ rel: path.relative(repoRoot, f), text: fs.readFileSync(f, 'utf8') }));
-  const writers = (re) => files.filter((f) => re.test(f.text)).map((f) => f.rel).sort();
   check('href or target=_blank is written only in possible-link',
-    writers(/\[href\]|\shref=|target="_blank"/).filter((rel) => !rel.endsWith('src/index.html')),
+    filesMatching(/\[href\]|\shref=|target="_blank"/).filter((rel) => !rel.endsWith('src/index.html')),
     ['src/app/@components/possible-link/possible-link.component.html']);
   check('HttpClient.get is called only from tl-api.service.ts',
-    writers(/\bhttp\.get\(/), ['src/app/@core/api/tl-api.service.ts']);
+    filesMatching(/\bhttp\.get\(/), ['src/app/@core/api/tl-api.service.ts']);
+}
+
+console.log('--- an empty value is a dash; zero and false are shown ---');
+{
+  const pipes = loadTs(path.join(repoRoot, 'src/app/@utils/pipes.ts'), {
+    '@angular/core': { Pipe: () => (target) => target },
+  });
+  check('isBlank: zero is a value', pipes.isBlank?.(0), false);
+  check('isBlank: false is a value', pipes.isBlank?.(false), false);
+  check("isBlank: '0' is a value", pipes.isBlank?.('0'), false);
+  check("isBlank: '' is blank", pipes.isBlank?.(''), true);
+  check('isBlank: null and undefined are blank', [pipes.isBlank?.(null), pipes.isBlank?.(undefined)], [true, true]);
+  const dash = (v) => (pipes.DashPipe ? new pipes.DashPipe().transform(v) : 'missing');
+  check('dash: zero is shown, not a dash', dash(0), 0);
+  check("dash: '' is a dash", dash(''), '-');
+  check('dash: null is a dash', dash(null), '-');
+  check('dash: text is shown', dash('abc'), 'abc');
+  check("templates: no `|| '-'` placeholder is left", filesMatching(/\|\|\s*["']-["']/), []);
+  check('templates: every table cell placeholder uses the dash pipe',
+    filesMatching(/\|\s*dash\b/),
+    ['src/app/@components/collection-table/collection-table.component.html',
+      'src/app/@components/list-table/list-table.component.html',
+      'src/app/@components/object-table/object-table.component.html']);
 }
 
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`);

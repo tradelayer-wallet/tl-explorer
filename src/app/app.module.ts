@@ -13,7 +13,7 @@ import { BlockPageComponent } from './@pages/block-page/block-page.component';
 import { HomePageComponent } from './@pages/home-page/home-page.component';
 import { TxPageComponent } from './@pages/tx-page/tx-page.component';
 import { PropertyPageComponent } from './@pages/property-page/property-page.component';
-import { TableBodyPipe, TableHeadersPipe } from './@utils/pipes';
+import { DashPipe, TableBodyPipe, TableHeadersPipe } from './@utils/pipes';
 import { ContractPageComponent } from './@pages/contract-page/contract-page.component';
 import { LastWinnersPageComponent } from './@pages/last-winners/last-winners-page.component';
 import { PossibleLinkComponent } from './@components/possible-link/possible-link.component';
@@ -40,7 +40,8 @@ const PAGE_COMPONENTS = [
 
 const DIRECTIVES = [
   TableHeadersPipe,
-  TableBodyPipe
+  TableBodyPipe,
+  DashPipe,
 ]
 
 @NgModule({
