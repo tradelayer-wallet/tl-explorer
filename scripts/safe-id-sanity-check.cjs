@@ -14,8 +14,11 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const crypto = require('crypto');
 const Module = require('module');
+const { execFileSync } = require('child_process');
 const ts = require('typescript');
 const { of, throwError } = require(path.join(__dirname, '..', 'node_modules', 'rxjs'));
 
@@ -339,26 +342,49 @@ console.log('--- the error page shows only a message the app set in navigation s
     pageMessage(null, { snapshot: { queryParams: { message: 'Your wallet is locked, call 555-0100' } } }), GENERIC);
 }
 
-console.log('--- the production page carries a script policy that admits only same-origin scripts ---');
+console.log('--- the production build admits exactly the inline code the CSP hashes ---');
 {
-  // The production build's three scripts are external modules. Its one inline script is the onload
-  // handler Angular's inline-critical CSS puts on the first stylesheet link (media print -> all). The
-  // policy admits exactly that handler text by hash ('unsafe-hashes' is what lets a hash match an
-  // event-handler attribute). Any other inline script, and any eval, is blocked by the browser.
-  const handlerHash = `'sha256-${require('crypto').createHash('sha256').update("this.media='all'").digest('base64')}'`;
-  const html = fs.readFileSync(path.join(repoRoot, 'src/index.html'), 'utf8');
-  const csp = /http-equiv="Content-Security-Policy"\s+content="([^"]*)"/i.exec(html);
-  const directives = new Map();
-  if (csp) {
-    for (const part of csp[1].split(';')) {
-      const [name, ...values] = part.trim().split(/\s+/);
-      if (name) directives.set(name.toLowerCase(), values.join(' '));
+  // The CSP in src/index.html is the only policy. It is checked against a fresh production build,
+  // not against a copy of the build's text: every inline handler and inline script in the output must
+  // have its hash in script-src, and no other hash may be there. Any eval is blocked by the browser.
+  const buildOut = fs.mkdtempSync(path.join(os.tmpdir(), 'tl-explorer-csp-'));
+  try {
+    execFileSync(process.execPath, [path.join(repoRoot, 'node_modules/@angular/cli/bin/ng.js'),
+      'build', '--configuration', 'production', '--output-path', buildOut], {
+      cwd: repoRoot,
+      env: { ...process.env, NG_CLI_ANALYTICS: 'false' },
+      stdio: 'pipe',
+    });
+    const built = fs.readFileSync(path.join(buildOut, 'index.html'), 'utf8');
+    const hashOf = (text) => `'sha256-${crypto.createHash('sha256').update(text).digest('base64')}'`;
+    const handlers = [...built.matchAll(/\son[a-z]+="([^"]*)"/gi)].map((m) => m[1]);
+    const inlineScripts = [...built.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/gi)]
+      .map((m) => m[1]);
+    const entityFree = handlers.every((h) => !h.includes('&'));
+    check('build: handler attributes contain no HTML entities (hash input is the raw text)', entityFree, true);
+    check('build: no inline <script> block (each would need its own hash)', inlineScripts.length, 0);
+
+    const html = fs.readFileSync(path.join(repoRoot, 'src/index.html'), 'utf8');
+    const csp = /http-equiv="Content-Security-Policy"\s+content="([^"]*)"/i.exec(html);
+    const directives = new Map();
+    if (csp) {
+      for (const part of csp[1].split(';')) {
+        const [name, ...values] = part.trim().split(/\s+/);
+        if (name) directives.set(name.toLowerCase(), values.join(' '));
+      }
     }
+    check('CSP is present in index.html', Boolean(csp), true);
+    const expectedScriptSrc = ["'self'", ...handlers.map(hashOf), ...(handlers.length ? ["'unsafe-hashes'"] : [])].join(' ');
+    check('script-src is exactly self plus the build handler hashes', directives.get('script-src'), expectedScriptSrc);
+    check("object-src is 'none'", directives.get('object-src'), "'none'");
+    check("base-uri is 'self'", directives.get('base-uri'), "'self'");
+
+    const prodEnv = fs.readFileSync(path.join(repoRoot, 'src/environments/environment.prod.ts'), 'utf8');
+    const apiOrigin = new URL(/apiUrl:\s*'([^']+)'/.exec(prodEnv)[1]).origin;
+    check('connect-src admits the production API origin', (directives.get('connect-src') || '').split(' ').includes(apiOrigin), true);
+  } finally {
+    fs.rmSync(buildOut, { recursive: true, force: true });
   }
-  check('CSP is present in index.html', Boolean(csp), true);
-  check("script-src is 'self' plus the one build handler hash", directives.get('script-src'), `'self' ${handlerHash} 'unsafe-hashes'`);
-  check("object-src is 'none'", directives.get('object-src'), "'none'");
-  check("base-uri is 'self'", directives.get('base-uri'), "'self'");
 }
 
 console.log('--- a link value must have the shape of its target ---');
