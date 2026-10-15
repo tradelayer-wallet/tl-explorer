@@ -27,6 +27,8 @@ const servicePath = process.env.TL_API_SERVICE_FILE
   ? path.resolve(process.env.TL_API_SERVICE_FILE)
   : path.join(repoRoot, 'src/app/@core/api/tl-api.service.ts');
 const safeLinkPath = path.join(repoRoot, 'src/app/@core/safe-link.ts');
+const lookupPath = path.join(repoRoot, 'src/app/@core/lookup-value.ts');
+const propertyTypesPath = path.join(repoRoot, 'src/app/@components/property-types.ts');
 
 const API_URL = 'http://localhost:3000';
 const TXID = 'a'.repeat(64);
@@ -69,7 +71,10 @@ const check = (label, actual, expected) => {
 // API layer: every request URL is built from validated parts or not sent at all.
 // ---------------------------------------------------------------------------
 
+const lookupModule = loadTs(lookupPath, {});
+
 const { TradeLayerApi } = loadTs(servicePath, {
+  'src/app/@core/lookup-value': lookupModule,
   '@angular/core': { Injectable: () => (target) => target },
   '@angular/common/http': { HttpClient: class {} },
   '@angular/router': { Router: class {} },
@@ -389,7 +394,7 @@ console.log('--- the production build admits exactly the inline code the CSP has
 
 console.log('--- a link value must have the shape of its target ---');
 {
-  const pt = loadTs(path.join(repoRoot, 'src/app/@components/property-types.ts'), {});
+  const pt = loadTs(propertyTypesPath, { 'src/app/@core/lookup-value': lookupModule });
   check('address link for a valid address', pt.getLinkFromPropertyType('address', ADDR), ['/', 'addresses', ADDR]);
   check('address value with a path escape is not linked', pt.getLinkFromPropertyType('address', `../tx/${TXID}`), []);
   check('transaction link for a txid', pt.getLinkFromPropertyType('transaction', TXID), ['/', 'tx', TXID]);
@@ -407,14 +412,13 @@ console.log('--- a link value must have the shape of its target ---');
 // element writes external hrefs, one module calls HttpClient.
 // ---------------------------------------------------------------------------
 
-const propertyTypesPath = path.join(repoRoot, 'src/app/@components/property-types.ts');
 const sharedStubs = {
   '@angular/core': {
     Component: () => (target) => target,
     Input: () => () => {},
     Pipe: () => (target) => target,
   },
-  '../property-types': loadTs(propertyTypesPath, {}),
+  '../property-types': loadTs(propertyTypesPath, { 'src/app/@core/lookup-value': lookupModule }),
   'src/app/@core/safe-link': loadTs(safeLinkPath, {}),
 };
 
@@ -436,6 +440,36 @@ console.log('--- search box: a query routes to a transaction, block or address p
   check('search: all digits -> blocks route, trimmed', navs[1], ['blocks', '834692']);
   check('search: anything else -> addresses route', navs[2], ['addresses', ADDR]);
   check('search: blank query -> no navigation', navs.length, 3);
+}
+
+console.log('--- a router link and the API request for the same value agree ---');
+{
+  // Both layers read a value through lookup-value.ts. A link is either absent, when the request is
+  // refused, or it names the same id, address or txid the request carries.
+  const pt = loadTs(propertyTypesPath, { 'src/app/@core/lookup-value': lookupModule });
+  const linkCarries = (type, v) => {
+    const link = pt.getLinkFromPropertyType(type, v);
+    return link.length ? link[link.length - 1] : null;
+  };
+  const requestCarries = (fn) => {
+    const r = run(fn);
+    return r.requested.length ? r.requested[0].split('/').pop() : null;
+  };
+  const cases = [
+    ['blocks', (v) => api.getTransactionsForBlock(v), ['834692', '007', '0', 12, '1.5', '9999999999999999', '9007199254740991', '9007199254740993', '../1']],
+    ['contract', (v) => api.getContract(v), ['5', '007', '-1', '99999999999999999999', '3%2F..']],
+    ['property', (v) => api.getPropData(v), ['31', '031', '1e3']],
+    ['address', (v) => api.getBalance(v), [ADDR, '../x', 'a'.repeat(120), 'a'.repeat(121), `${ADDR}?x=1`]],
+    ['transaction', (v) => api.getTransaction(v), [TXID, TXID.toUpperCase(), '../' + 'a'.repeat(61), 'a'.repeat(63)]],
+  ];
+  for (const [type, call, values] of cases) {
+    for (const v of values) {
+      const want = requestCarries(() => call(v));
+      check(`${type} ${JSON.stringify(String(v).slice(0, 24))} (${String(v).length} chars): link and request agree`, linkCarries(type, v) === want, true);
+    }
+  }
+  check('lookup: "007" is the canonical id 7', lookupModule.canonicalLookup('id', '007'), '7');
+  check('lookup: an id above 2^53 - 1 has no canonical form', lookupModule.canonicalLookup('id', '9999999999999999'), null);
 }
 
 console.log('--- link components: values and stale state ---');

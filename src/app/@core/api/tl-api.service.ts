@@ -3,6 +3,7 @@ import { environment } from "src/environments/environment";
 import { HttpClient } from "@angular/common/http";
 import { catchError, EMPTY, map, Observable, of } from "rxjs";
 import { Router } from "@angular/router";
+import { canonicalLookup, LookupKind } from "src/app/@core/lookup-value";
 
 export enum PropertyCacheType {
     NativeFees = 0,
@@ -50,15 +51,7 @@ const BLOCKS: Block[] = Array.from(Array(10)).map((n,i)=>(
 // object literal shaped like ApiParam is a type error too, because the class has
 // a private member. get() also refuses at runtime anything that the factories
 // did not create, so an `as unknown as ApiParam` cast cannot reach the URL.
-const TXID_RE = /^[0-9a-fA-F]{64}$/;
-// base58 (legacy) and bech32 (segwit) addresses are alphanumeric. This charset
-// excludes `/`, `.`, `?`, `#`, `%` and whitespace, so encoding is a no-op.
-const ADDRESS_RE = /^[A-Za-z0-9]{10,120}$/;
-// Numeric ids arrive as route-param strings (`'123'`) or as numbers. Strings
-// must be canonical decimal digits (no sign, point, hex or exponent) of at most
-// 16 characters; numbers must be safe non-negative integers. Number.isSafeInteger
-// rejects the values above 2^53 - 1 that a 16-digit string can still express.
-const ID_RE = /^\d{1,16}$/;
+// What counts as a valid txid, address or id is defined once, in lookup-value.ts.
 
 export type IdParam = number | string;
 
@@ -89,30 +82,20 @@ class ApiParam {
     }
 
     static txid(value: unknown): ApiParam {
-        return ApiParam.create(ApiParam.match(value, TXID_RE));
+        return ApiParam.of('txid', value);
     }
 
     static address(value: unknown): ApiParam {
-        return ApiParam.create(ApiParam.match(value, ADDRESS_RE));
+        return ApiParam.of('address', value);
     }
 
     static id(value: unknown): ApiParam {
-        return ApiParam.create(ApiParam.canonicalId(value));
+        return ApiParam.of('id', value);
     }
 
-    private static match(value: unknown, pattern: RegExp): string | null {
-        return (typeof value === 'string' && pattern.test(value)) ? encodeURIComponent(value) : null;
-    }
-
-    private static canonicalId(value: unknown): string | null {
-        if (typeof value === 'string') {
-            if (!ID_RE.test(value)) return null;
-            // Number() drops leading zeros: '007' -> 7.
-            value = Number(value);
-        }
-        return (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0)
-            ? String(value)
-            : null;
+    private static of(kind: LookupKind, value: unknown): ApiParam {
+        const canonical = canonicalLookup(kind, value);
+        return ApiParam.create(canonical === null ? null : encodeURIComponent(canonical));
     }
 }
 

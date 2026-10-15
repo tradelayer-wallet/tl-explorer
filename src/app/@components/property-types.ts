@@ -1,3 +1,5 @@
+import { canonicalLookup, LookupKind } from 'src/app/@core/lookup-value';
+
 const ADDRESS_PROPERTIES = [
   'issuer',
 ];
@@ -70,28 +72,26 @@ export const getLinkFromPropertyName = (propertyName: string, value: string): st
   return getLinkFromPropertyType(propertyTypeOf(propertyName) ?? '', value);
 }
 
-// The shape each link target accepts. A value outside it is not linked: the value
-// goes into a router path, and Angular resolves `..` and `/` inside it, so an
-// unchecked value could steer a link to another page while its text says otherwise.
-const VALUE_FORMAT: { [key in PROPERTY_TYPES]: RegExp | null } = {
-  blocks: /^\d{1,16}$/,
-  address: /^[A-Za-z0-9]{10,120}$/,
-  contract: /^\d{1,16}$/,
+// The lookup kind each link target takes its value as. A value of another shape is
+// not linked: the value goes into a router path, and Angular resolves `..` and `/`
+// inside it, so an unchecked value could steer a link to another page while its
+// text says otherwise. The shape is the one the API request uses (lookup-value.ts).
+const LOOKUP_KIND: { [key in PROPERTY_TYPES]: LookupKind | null } = {
+  blocks: 'id',
+  address: 'address',
+  contract: 'id',
   url: null,
-  transaction: /^[0-9a-fA-F]{64}$/,
-  property: /^\d{1,16}$/,
+  transaction: 'txid',
+  property: 'id',
 };
 
 export const getLinkFromPropertyType = (propertyType: string, value: string | number): string[] => {
   if (!isPropertyType(propertyType)) {
     return noLink(String(value));
   }
-  const format = VALUE_FORMAT[propertyType];
-  const text = typeof value === 'number' ? String(value) : value;
-  if (!format || typeof text !== 'string' || !format.test(text)) {
-    return [];
-  }
-  return TypeToHandler[propertyType](text);
+  const kind = LOOKUP_KIND[propertyType];
+  const canonical = kind ? canonicalLookup(kind, value) : null;
+  return canonical === null ? [] : TypeToHandler[propertyType](canonical);
 }
 
 export const isLinkable = (key: string): boolean => {
