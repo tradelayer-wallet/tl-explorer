@@ -402,5 +402,89 @@ console.log('--- a link value must have the shape of its target ---');
   check('a key that names an inherited member is not linkable', pt.isLinkable('constructor'), false);
 }
 
+// ---------------------------------------------------------------------------
+// Characterization of the in-app link and table layer, and structural guards: one
+// element writes external hrefs, one module calls HttpClient.
+// ---------------------------------------------------------------------------
+
+const propertyTypesPath = path.join(repoRoot, 'src/app/@components/property-types.ts');
+const sharedStubs = {
+  '@angular/core': {
+    Component: () => (target) => target,
+    Input: () => () => {},
+    Pipe: () => (target) => target,
+  },
+  '../property-types': loadTs(propertyTypesPath, {}),
+  'src/app/@core/safe-link': loadTs(safeLinkPath, {}),
+};
+
+console.log('--- search box: a query routes to a transaction, block or address page ---');
+{
+  const appPath = path.join(repoRoot, 'src/app/app.component.ts');
+  const { AppComponent } = loadTs(appPath, {
+    '@angular/core': { Component: () => (target) => target },
+    '@angular/router': { Router: class {} },
+  });
+  const navs = [];
+  const app = new AppComponent({ navigate: (commands) => { navs.push(commands); return Promise.resolve(true); } });
+  app.search(TXID);
+  app.search('  834692 ');
+  app.search(ADDR);
+  app.search('   ');
+  app.search(undefined);
+  check('search: 64-character query -> tx route', navs[0], ['tx', TXID]);
+  check('search: all digits -> blocks route, trimmed', navs[1], ['blocks', '834692']);
+  check('search: anything else -> addresses route', navs[2], ['addresses', ADDR]);
+  check('search: blank query -> no navigation', navs.length, 3);
+}
+
+console.log('--- link components: values and stale state ---');
+{
+  const { ListTableComponent } = loadTs(path.join(repoRoot, 'src/app/@components/list-table/list-table.component.ts'), sharedStubs);
+  const list = new ListTableComponent();
+  list.linkType = 'address';
+  check('list-table: valid address value links', list.link(ADDR), ['/', 'addresses', ADDR]);
+  check('list-table: non-address value does not link', list.link('../x'), []);
+  check('list-table: empty value link (current)', list.link(''), ['']);
+
+  const { CollectionTableComponent } = loadTs(path.join(repoRoot, 'src/app/@components/collection-table/collection-table.component.ts'), sharedStubs);
+  const coll = new CollectionTableComponent();
+  coll.linkType = 'transaction';
+  check('collection-table: txid row links', coll.link(TXID), ['/', 'tx', TXID]);
+  check('collection-table: non-txid row does not link', coll.link('834692'), []);
+
+  const { PossibleLinkComponent } = loadTs(path.join(repoRoot, 'src/app/@components/possible-link/possible-link.component.ts'), sharedStubs);
+  const pl = new PossibleLinkComponent();
+  pl.key = 'url';
+  pl.value = 'https://example.com';
+  pl.ngOnChanges({ key: {}, value: {} });
+  check('possible-link: url value gets an href', pl.externalHref, 'https://example.com/');
+  pl.value = 'javascript:alert(1)';
+  pl.ngOnChanges({ value: {} });
+  check('possible-link: unsafe next value clears the previous href', pl.externalHref, null);
+  pl.key = 'issuer';
+  pl.value = ADDR;
+  pl.ngOnChanges({ key: {}, value: {} });
+  check('possible-link: issuer key links internally, no href', [pl.link, pl.externalHref], [['/', 'addresses', ADDR], null]);
+  pl.key = 'propertyid';
+  pl.value = 0;
+  pl.ngOnChanges({ key: {}, value: {} });
+  check('possible-link: numeric zero is not linked (current)', pl.link, []);
+}
+
+console.log('--- one element writes external hrefs; one module calls HttpClient ---');
+{
+  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]);
+  const files = walk(path.join(repoRoot, 'src')).filter((f) => /\.(ts|html)$/.test(f))
+    .map((f) => ({ rel: path.relative(repoRoot, f), text: fs.readFileSync(f, 'utf8') }));
+  const writers = (re) => files.filter((f) => re.test(f.text)).map((f) => f.rel).sort();
+  check('href or target=_blank is written only in possible-link',
+    writers(/\[href\]|\shref=|target="_blank"/).filter((rel) => !rel.endsWith('src/index.html')),
+    ['src/app/@components/possible-link/possible-link.component.html']);
+  check('HttpClient.get is called only from tl-api.service.ts',
+    writers(/\bhttp\.get\(/), ['src/app/@core/api/tl-api.service.ts']);
+}
+
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);
