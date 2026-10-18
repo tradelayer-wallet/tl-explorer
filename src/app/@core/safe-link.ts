@@ -20,15 +20,21 @@ const BARE_HOST = /^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+(:\d{1,5})?([/?#].*)?$/;
 // at http://192.168.0.1/, or a local service on localhost). Only literal
 // addresses, single-label names and the local name spaces are judged here. A
 // single label (`localhost`, `nas`) resolves through the reader's DNS search
-// suffixes, so it is refused like a LAN name; a public name has a dot.
-// Other DNS names are not resolved. `hostname` comes from WHATWG, so it is
-// lowercase and IPv4 is dotted decimal.
+// suffixes, so it is refused like a LAN name; a public name has a dot. A name
+// under one of LOCAL_NAME_SUFFIXES is answered by local DNS or is reserved, so it
+// is refused in any label count. Other DNS names are not resolved. `hostname`
+// comes from WHATWG, so it is lowercase and IPv4 is dotted decimal.
+const LOCAL_NAME_SUFFIXES = [
+  '.localhost', '.local', '.localdomain', '.lan', '.home', '.home.arpa', '.internal',
+  '.corp', '.intranet', '.private', '.test', '.example', '.invalid',
+];
+
 const isNonPublicHost = (hostname: string): boolean => {
   const host = hostname.replace(/\.+$/, '');
   if (!host.startsWith('[') && !host.includes('.')) {
     return true;
   }
-  if (host.endsWith('.localhost') || host.endsWith('.local')) {
+  if (LOCAL_NAME_SUFFIXES.some((suffix) => host.endsWith(suffix))) {
     return true;
   }
   const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);

@@ -295,6 +295,21 @@ if (typeof safeExternalHref !== 'function') {
   check('single-label host with http refused (router admin)', href('http://router/admin'), null);
   check('single-label host with port refused', href('https://nas:8080/'), null);
   check('single-label host with trailing dot refused', href('https://nas./'), null);
+  // Round 13 / E2: names that only a local DNS resolver answers, in any label count.
+  check('.lan name refused', href('https://router.lan/'), null);
+  check('.home name refused', href('https://nas.home/'), null);
+  check('.home.arpa name refused', href('https://printer.home.arpa/'), null);
+  check('.internal name refused', href('https://nas.internal/'), null);
+  check('.corp name refused', href('https://fileserver.corp/'), null);
+  check('.intranet name refused', href('https://wiki.intranet/'), null);
+  check('.private name refused', href('https://vault.private/'), null);
+  check('.localdomain name refused', href('https://box.localdomain/'), null);
+  check('.test name refused', href('https://svc.test/'), null);
+  check('.example name refused', href('https://svc.example/'), null);
+  check('.invalid name refused', href('https://svc.invalid/'), null);
+  check('.lan with port refused', href('http://router.lan:8080/'), null);
+  check('public name that only contains a suffix is allowed (.home.com)', href('https://home.com/'), 'https://home.com/');
+  check('public name that starts like a suffix is allowed (testing.com)', href('https://test.testing.com/'), 'https://test.testing.com/');
   check('public IPv4 still allowed', href('https://8.8.8.8/'), 'https://8.8.8.8/');
   check('172.32/16 is public and allowed', href('https://172.32.0.1/'), 'https://172.32.0.1/');
   check('public IPv6 still allowed', href('https://[2001:4860:4860::8888]/'), 'https://[2001:4860:4860::8888]/');
