@@ -289,6 +289,12 @@ if (typeof safeExternalHref !== 'function') {
   check('IPv6 link-local refused', href('https://[fe80::1]/'), null);
   check('IPv6 unique-local refused', href('https://[fd12:3456::1]/'), null);
   check('.localhost name refused', href('https://app.localhost/'), null);
+  // Round 12 / F1: a single-label host resolves through the reader's DNS search
+  // suffixes, so it is refused whether or not the value has a scheme.
+  check('single-label host with https refused (LAN name)', href('https://nas/'), null);
+  check('single-label host with http refused (router admin)', href('http://router/admin'), null);
+  check('single-label host with port refused', href('https://nas:8080/'), null);
+  check('single-label host with trailing dot refused', href('https://nas./'), null);
   check('public IPv4 still allowed', href('https://8.8.8.8/'), 'https://8.8.8.8/');
   check('172.32/16 is public and allowed', href('https://172.32.0.1/'), 'https://172.32.0.1/');
   check('public IPv6 still allowed', href('https://[2001:4860:4860::8888]/'), 'https://[2001:4860:4860::8888]/');

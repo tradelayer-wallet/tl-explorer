@@ -18,11 +18,17 @@ const BARE_HOST = /^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+(:\d{1,5})?([/?#].*)?$/;
 // Loopback, private, link-local and unspecified targets are refused too. An
 // on-chain URL must not open the reader's own machine or LAN (a router admin page
 // at http://192.168.0.1/, or a local service on localhost). Only literal
-// addresses and the local name spaces are judged here; DNS names are not resolved.
-// `hostname` comes from WHATWG, so it is lowercase and IPv4 is dotted decimal.
+// addresses, single-label names and the local name spaces are judged here. A
+// single label (`localhost`, `nas`) resolves through the reader's DNS search
+// suffixes, so it is refused like a LAN name; a public name has a dot.
+// Other DNS names are not resolved. `hostname` comes from WHATWG, so it is
+// lowercase and IPv4 is dotted decimal.
 const isNonPublicHost = (hostname: string): boolean => {
   const host = hostname.replace(/\.+$/, '');
-  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) {
+  if (!host.startsWith('[') && !host.includes('.')) {
+    return true;
+  }
+  if (host.endsWith('.localhost') || host.endsWith('.local')) {
     return true;
   }
   const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
