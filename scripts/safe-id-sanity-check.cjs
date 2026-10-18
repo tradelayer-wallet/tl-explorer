@@ -310,6 +310,11 @@ if (typeof safeExternalHref !== 'function') {
   check('.lan with port refused', href('http://router.lan:8080/'), null);
   check('public name that only contains a suffix is allowed (.home.com)', href('https://home.com/'), 'https://home.com/');
   check('public name that starts like a suffix is allowed (testing.com)', href('https://test.testing.com/'), 'https://test.testing.com/');
+  // Round 13 / E1: an IPv6 literal is judged by its address, not by its spelling.
+  check('zero-padded IPv6 literal allowed (same address as 2001:db8::1)', href('https://[2001:0db8::1]/'), 'https://[2001:db8::1]/');
+  check('IPv6 literal with port and zero-padded group allowed', href('https://[2001:0db8::1]:8443/x'), 'https://[2001:db8::1]:8443/x');
+  check('IPv4 with trailing dot allowed (same address as 8.8.8.8)', href('https://8.8.8.8./'), 'https://8.8.8.8/');
+  check('trailing-dot domain allowed', href('https://example.com./'), 'https://example.com./');
   check('public IPv4 still allowed', href('https://8.8.8.8/'), 'https://8.8.8.8/');
   check('172.32/16 is public and allowed', href('https://172.32.0.1/'), 'https://172.32.0.1/');
   check('public IPv6 still allowed', href('https://[2001:4860:4860::8888]/'), 'https://[2001:4860:4860::8888]/');

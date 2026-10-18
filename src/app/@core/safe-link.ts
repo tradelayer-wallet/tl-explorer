@@ -93,8 +93,16 @@ export function safeExternalHref(value: unknown): string | null {
   // decodes percent-escapes in hosts (`%65vil.com`) and turns numeric forms
   // into dotted IPv4 (`0x7f.1`, `2130706433`), and it accepts an empty host
   // (`https:///x.com`). Each of those changes the target away from the text.
-  const hostText = authority.replace(/:\d*$/, '').toLowerCase();
-  if (!hostText || url.hostname !== hostText) {
+  const hostText = authority.replace(/:\d*$/, '').toLowerCase().replace(/\.+$/, '');
+  if (!hostText) {
+    return null;
+  }
+  // A trailing dot names the same host. An IPv6 literal is compared by address:
+  // WHATWG's spelling drops zero groups (`[2001:0db8::1]` is `[2001:db8::1]`), and
+  // a literal has no percent-escapes or numeric forms that could change its target.
+  const sameHost = hostText.startsWith('[')
+    || hostText === url.hostname.replace(/\.+$/, '');
+  if (!sameHost) {
     return null;
   }
   if (isNonPublicHost(url.hostname)) {
