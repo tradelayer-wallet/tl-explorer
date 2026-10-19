@@ -22,12 +22,17 @@ const BARE_HOST = /^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+(:\d{1,5})?([/?#].*)?$/;
 // single label (`localhost`, `nas`) resolves through the reader's DNS search
 // suffixes, so it is refused like a LAN name; a public name has a dot. A name
 // under one of LOCAL_NAME_SUFFIXES is answered by local DNS or is reserved, so it
-// is refused in any label count. Other DNS names are not resolved. `hostname`
-// comes from WHATWG, so it is lowercase and IPv4 is dotted decimal.
+// is refused in any label count. A name under a WILDCARD_DNS_DOMAINS service, or
+// with four labels that spell an IPv4 address, is answered with the address it
+// names, so it is refused as that address would be. The service list is not
+// complete: a wildcard service that is not listed is not caught. Other DNS names
+// are not resolved. `hostname` comes from WHATWG, so it is lowercase and IPv4 is
+// dotted decimal.
 const LOCAL_NAME_SUFFIXES = [
   '.localhost', '.local', '.localdomain', '.lan', '.home', '.home.arpa', '.internal',
   '.corp', '.intranet', '.private', '.test', '.example', '.invalid',
 ];
+const WILDCARD_DNS_DOMAINS = ['nip.io', 'sslip.io', 'xip.io', 'localtest.me', 'lvh.me', 'vcap.me'];
 
 // An IPv4 address is judged by its first three octets: private, loopback,
 // link-local (cloud metadata), CGNAT, benchmarking, documentation, the IETF
@@ -91,6 +96,20 @@ const nonPublicIPv6 = (inner: string): boolean => {
   return (g0 === 0x2001 && g1 < 0x0200) || (g0 === 0x2001 && g1 === 0x0db8) || (g0 === 0x3fff && g1 < 0x1000);
 };
 
+const isOctet = (label: string): boolean => /^\d{1,3}$/.test(label) && Number(label) <= 255;
+
+// Four dot-separated labels that are octets, anywhere in the name, spell an IPv4
+// literal (`10.0.0.1.example.com`), which a wildcard service would answer.
+const embedsIPv4Literal = (host: string): boolean => {
+  const labels = host.split('.');
+  for (let i = 0; i + 4 <= labels.length; i++) {
+    if (labels.slice(i, i + 4).every(isOctet)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const isNonPublicHost = (hostname: string): boolean => {
   const host = hostname.replace(/\.+$/, '');
   if (!host.startsWith('[') && !host.includes('.')) {
@@ -106,7 +125,10 @@ const isNonPublicHost = (hostname: string): boolean => {
   if (host.startsWith('[')) {
     return nonPublicIPv6(host.slice(1, -1));
   }
-  return false;
+  if (WILDCARD_DNS_DOMAINS.some((domain) => host === domain || host.endsWith(`.${domain}`))) {
+    return true;
+  }
+  return embedsIPv4Literal(host);
 };
 
 export function safeExternalHref(value: unknown): string | null {

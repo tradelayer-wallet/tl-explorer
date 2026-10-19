@@ -379,6 +379,24 @@ if (typeof safeExternalHref !== 'function') {
   for (const [url, external, why] of ipv4Cases) {
     check(`${why}: ${external ? 'external' : 'refused'}`, href(url) !== null, external);
   }
+  // Round 16 / F4: a public-looking name that a wildcard DNS service resolves to a
+  // local address is refused, and so is a name whose labels embed an IPv4 literal.
+  check('nip.io name embedding 127.0.0.1 refused', href('https://127.0.0.1.nip.io/'), null);
+  check('sslip.io name embedding 1.2.3.4 refused', href('https://1.2.3.4.sslip.io/'), null);
+  check('nip.io subdomain refused', href('https://a.b.nip.io/'), null);
+  check('nip.io apex refused', href('https://nip.io/'), null);
+  check('xip.io subdomain refused', href('https://x.xip.io/'), null);
+  check('localtest.me refused', href('https://localtest.me/'), null);
+  check('localtest.me subdomain refused', href('https://app.localtest.me/'), null);
+  check('lvh.me refused', href('https://lvh.me/'), null);
+  check('lvh.me subdomain refused', href('https://a.lvh.me/'), null);
+  check('vcap.me refused', href('https://vcap.me/'), null);
+  check('vcap.me subdomain refused', href('https://a.vcap.me/'), null);
+  check('public name whose labels embed an IPv4 literal refused (10.0.0.1.example.com)', href('https://10.0.0.1.example.com/'), null);
+  check('IPv4 literal among other labels refused (a.10.0.0.1.example.com)', href('https://a.10.0.0.1.example.com/'), null);
+  check('public name containing a wildcard service name as a label allowed (ex.nip.io.example.com)', href('https://ex.nip.io.example.com/'), 'https://ex.nip.io.example.com/');
+  check('public name containing lvh.me as a label allowed (mylvh.me.example.com)', href('https://mylvh.me.example.com/'), 'https://mylvh.me.example.com/');
+  check('three numeric labels are not an IPv4 literal (1.2.3.example.com)', href('https://1.2.3.example.com/'), 'https://1.2.3.example.com/');
   check('empty', href(''), null);
   check('whitespace only', href('   '), null);
   check('number', href(12), null);
