@@ -29,14 +29,20 @@ const LOCAL_NAME_SUFFIXES = [
   '.corp', '.intranet', '.private', '.test', '.example', '.invalid',
 ];
 
-// An IPv4 address is judged by its first two octets: private, loopback,
-// link-local (cloud metadata), CGNAT, multicast and reserved space.
-const nonPublicIPv4 = (a: number, b: number): boolean =>
+// An IPv4 address is judged by its first three octets: private, loopback,
+// link-local (cloud metadata), CGNAT, benchmarking, documentation, the IETF
+// protocol block, multicast and reserved space.
+const nonPublicIPv4 = (a: number, b: number, c: number): boolean =>
   a === 0 || a === 10 || a === 127 || a >= 224
   || (a === 100 && b >= 64 && b <= 127)   // CGNAT
   || (a === 169 && b === 254)             // link-local, cloud metadata
   || (a === 172 && b >= 16 && b <= 31)
-  || (a === 192 && b === 168);
+  || (a === 192 && b === 168)
+  || (a === 192 && b === 0 && c === 0)    // IETF protocol assignments 192.0.0.0/24
+  || (a === 192 && b === 0 && c === 2)    // documentation 192.0.2.0/24
+  || (a === 198 && (b === 18 || b === 19)) // benchmarking 198.18.0.0/15
+  || (a === 198 && b === 51 && c === 100) // documentation 198.51.100.0/24
+  || (a === 203 && b === 0 && c === 113); // documentation 203.0.113.0/24
 
 // The eight 16-bit groups of an IPv6 literal (WHATWG spelling, without brackets),
 // or null when the spelling is not one this parser understands.
@@ -64,24 +70,25 @@ const ipv6Groups = (inner: string): number[] | null => {
 // 6to4 2002::/16 (groups 2 and 3). Everything else is refused, including the
 // unspecified, loopback, IPv4-mapped and IPv4-compatible ::/96 forms, unique local
 // and link-local, site-local, multicast, the NAT64 local-use prefix 64:ff9b:1::/48,
-// the discard prefix 100::/64, and the IETF block 2001::/23 (Teredo, which obfuscates
-// its address, and the benchmarking and ORCHID blocks) and documentation 2001:db8::/32.
+// the discard prefix 100::/64, the IETF block 2001::/23 (Teredo, which obfuscates
+// its address, and the benchmarking and ORCHID blocks), documentation 2001:db8::/32
+// and documentation 3fff::/20.
 const nonPublicIPv6 = (inner: string): boolean => {
   const g = ipv6Groups(inner);
   if (g === null) {
     return true;
   }
-  const [g0, g1, g2, g3, g4, g5, g6] = g;
+  const [g0, g1, g2, g3, g4, g5, g6, g7] = g;
   if (g0 === 0x64 && g1 === 0xff9b && g2 === 0 && g3 === 0 && g4 === 0 && g5 === 0) {
-    return nonPublicIPv4(g6 >> 8, g6 & 0xff);
+    return nonPublicIPv4(g6 >> 8, g6 & 0xff, g7 >> 8);
   }
   if (g0 === 0x2002) {
-    return nonPublicIPv4(g1 >> 8, g1 & 0xff);
+    return nonPublicIPv4(g1 >> 8, g1 & 0xff, g2 >> 8);
   }
   if ((g0 & 0xe000) !== 0x2000) {
     return true;
   }
-  return (g0 === 0x2001 && g1 < 0x0200) || (g0 === 0x2001 && g1 === 0x0db8);
+  return (g0 === 0x2001 && g1 < 0x0200) || (g0 === 0x2001 && g1 === 0x0db8) || (g0 === 0x3fff && g1 < 0x1000);
 };
 
 const isNonPublicHost = (hostname: string): boolean => {
@@ -94,7 +101,7 @@ const isNonPublicHost = (hostname: string): boolean => {
   }
   const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
   if (v4) {
-    return nonPublicIPv4(Number(v4[1]), Number(v4[2]));
+    return nonPublicIPv4(Number(v4[1]), Number(v4[2]), Number(v4[3]));
   }
   if (host.startsWith('[')) {
     return nonPublicIPv6(host.slice(1, -1));

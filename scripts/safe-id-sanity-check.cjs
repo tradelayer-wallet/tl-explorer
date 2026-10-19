@@ -349,6 +349,36 @@ if (typeof safeExternalHref !== 'function') {
   for (const [url, external, why] of ipv6Cases) {
     check(`IPv6 ${why}: ${external ? 'external' : 'refused'}`, href(url) !== null, external);
   }
+  // Round 16 / F3: documentation, benchmarking and IETF protocol blocks are not public.
+  // The IPv4 blocks are /24 and /15 ranges, so the neighbours of each are checked too.
+  const ipv4Cases = [
+    ['https://192.0.0.5/', false, '192.0.0.0/24 IETF protocol assignments'],
+    ['https://192.0.2.1/', false, '192.0.2.0/24 documentation'],
+    ['https://198.51.100.7/', false, '198.51.100.0/24 documentation'],
+    ['https://203.0.113.9/', false, '203.0.113.0/24 documentation'],
+    ['https://198.18.0.1/', false, '198.18.0.0/15 benchmarking'],
+    ['https://198.19.255.1/', false, '198.18.0.0/15 benchmarking, upper half'],
+    ['https://100.64.0.1/', false, '100.64.0.0/10 carrier-grade NAT'],
+    ['https://240.0.0.1/', false, '240.0.0.0/4 reserved'],
+    ['https://255.255.255.255/', false, 'broadcast'],
+    ['https://192.0.43.10/', true, 'public 192.0.43.10, outside 192.0.0.0/24'],
+    ['https://198.20.0.1/', true, 'public 198.20.0.1, outside 198.18.0.0/15'],
+    ['https://8.8.8.8/', true, 'public 8.8.8.8'],
+    ['https://[3fff::1]/', false, '3fff::/20 documentation'],
+    ['https://[3fff:0fff:ffff::1]/', false, '3fff::/20 upper end'],
+    ['https://[3fff:1000::1]/', true, '3fff:1000::/20 is outside 3fff::/20'],
+    ['https://[2002:c000:0201::1]/', false, '6to4 embedding 192.0.2.1 (documentation)'],
+    ['https://[2002:cb00:7101::1]/', false, '6to4 embedding 203.0.113.1 (documentation)'],
+    ['https://[2002:c000:0100::1]/', true, '6to4 embedding 192.0.1.0, outside 192.0.0.0/24 and 192.0.2.0/24'],
+    ['https://[2002:c000:0001::1]/', false, '6to4 embedding 192.0.0.1 (IETF protocol assignments)'],
+    ['https://[64:ff9b::c000:201]/', false, 'NAT64 embedding 192.0.2.1 (documentation)'],
+    ['https://[64:ff9b::cb00:7101]/', false, 'NAT64 embedding 203.0.113.1 (documentation)'],
+    ['https://[64:ff9b::c633:6401]/', false, 'NAT64 embedding 198.51.100.1 (documentation)'],
+    ['https://[64:ff9b::c000:0a01]/', true, 'NAT64 embedding 192.0.10.1, outside 192.0.0.0/24 and 192.0.2.0/24'],
+  ];
+  for (const [url, external, why] of ipv4Cases) {
+    check(`${why}: ${external ? 'external' : 'refused'}`, href(url) !== null, external);
+  }
   check('empty', href(''), null);
   check('whitespace only', href('   '), null);
   check('number', href(12), null);
