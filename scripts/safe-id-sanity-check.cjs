@@ -311,13 +311,44 @@ if (typeof safeExternalHref !== 'function') {
   check('public name that only contains a suffix is allowed (.home.com)', href('https://home.com/'), 'https://home.com/');
   check('public name that starts like a suffix is allowed (testing.com)', href('https://test.testing.com/'), 'https://test.testing.com/');
   // Round 13 / E1: an IPv6 literal is judged by its address, not by its spelling.
-  check('zero-padded IPv6 literal allowed (same address as 2001:db8::1)', href('https://[2001:0db8::1]/'), 'https://[2001:db8::1]/');
-  check('IPv6 literal with port and zero-padded group allowed', href('https://[2001:0db8::1]:8443/x'), 'https://[2001:db8::1]:8443/x');
+  check('zero-padded IPv6 literal allowed (same address as 2606:4700:4700::1111)', href('https://[2606:4700:4700:0000::1111]/'), 'https://[2606:4700:4700::1111]/');
+  check('IPv6 literal with port and zero-padded group allowed', href('https://[2606:4700:4700:0000::1111]:8443/x'), 'https://[2606:4700:4700::1111]:8443/x');
   check('IPv4 with trailing dot allowed (same address as 8.8.8.8)', href('https://8.8.8.8./'), 'https://8.8.8.8/');
   check('trailing-dot domain allowed', href('https://example.com./'), 'https://example.com./');
   check('public IPv4 still allowed', href('https://8.8.8.8/'), 'https://8.8.8.8/');
   check('172.32/16 is public and allowed', href('https://172.32.0.1/'), 'https://172.32.0.1/');
   check('public IPv6 still allowed', href('https://[2001:4860:4860::8888]/'), 'https://[2001:4860:4860::8888]/');
+  // Round 15 / E1: an IPv6 literal is classified by the address it reaches. Global
+  // unicast 2000::/3 is external. A transition prefix is judged by the IPv4 address
+  // it embeds (NAT64 64:ff9b::/96, 6to4 2002::/16). Everything else is refused.
+  const ipv6Cases = [
+    ['https://[64:ff9b::7f00:1]/', false, 'NAT64 embedding 127.0.0.1'],
+    ['https://[64:ff9b::a9fe:a9fe]/', false, 'NAT64 embedding 169.254.169.254 (metadata)'],
+    ['https://[64:ff9b::a00:1]/', false, 'NAT64 embedding 10.0.0.1'],
+    ['https://[64:ff9b::c0a8:101]/', false, 'NAT64 embedding 192.168.1.1'],
+    ['https://[64:ff9b::808:808]/', true, 'NAT64 embedding public 8.8.8.8'],
+    ['https://[64:ff9b:1::1]/', false, 'NAT64 local-use prefix 64:ff9b:1::/48'],
+    ['https://[2002:7f00:1::]/', false, '6to4 embedding 127.0.0.1'],
+    ['https://[2002:a00:1::1]/', false, '6to4 embedding 10.0.0.1'],
+    ['https://[2002:a9fe:a9fe::]/', false, '6to4 embedding 169.254.169.254'],
+    ['https://[2002:808:808::1]/', true, '6to4 embedding public 8.8.8.8'],
+    ['https://[2001::1]/', false, 'Teredo 2001::/32'],
+    ['https://[2001:2::1]/', false, 'benchmarking 2001:2::/48 (inside 2001::/23)'],
+    ['https://[2001:db8::1]/', false, 'documentation 2001:db8::/32'],
+    ['https://[100::1]/', false, 'discard 100::/64'],
+    ['https://[fec0::1]/', false, 'site-local fec0::/10'],
+    ['https://[fc00::1]/', false, 'unique local fc00::/7'],
+    ['https://[ff02::1]/', false, 'multicast ff02::/8'],
+    ['https://[::8.8.8.8]/', false, 'IPv4-compatible ::/96 with a public address'],
+    ['https://[::ffff:8.8.8.8]/', false, 'IPv4-mapped ::ffff:0:0/96 with a public address'],
+    ['https://[::]/', false, 'unspecified'],
+    ['https://[::1]/', false, 'loopback'],
+    ['https://[2606:4700:4700::1111]/', true, 'global unicast 2606:4700::/32'],
+    ['https://[2a00:1450:4001::200e]/', true, 'global unicast 2a00:1450::/32'],
+  ];
+  for (const [url, external, why] of ipv6Cases) {
+    check(`IPv6 ${why}: ${external ? 'external' : 'refused'}`, href(url) !== null, external);
+  }
   check('empty', href(''), null);
   check('whitespace only', href('   '), null);
   check('number', href(12), null);

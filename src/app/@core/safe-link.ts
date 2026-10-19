@@ -29,6 +29,61 @@ const LOCAL_NAME_SUFFIXES = [
   '.corp', '.intranet', '.private', '.test', '.example', '.invalid',
 ];
 
+// An IPv4 address is judged by its first two octets: private, loopback,
+// link-local (cloud metadata), CGNAT, multicast and reserved space.
+const nonPublicIPv4 = (a: number, b: number): boolean =>
+  a === 0 || a === 10 || a === 127 || a >= 224
+  || (a === 100 && b >= 64 && b <= 127)   // CGNAT
+  || (a === 169 && b === 254)             // link-local, cloud metadata
+  || (a === 172 && b >= 16 && b <= 31)
+  || (a === 192 && b === 168);
+
+// The eight 16-bit groups of an IPv6 literal (WHATWG spelling, without brackets),
+// or null when the spelling is not one this parser understands.
+const ipv6Groups = (inner: string): number[] | null => {
+  const halves = inner.split('::');
+  if (halves.length > 2) {
+    return null;
+  }
+  const groups = (part: string): number[] =>
+    part === '' ? [] : part.split(':').map((g) => (/^[0-9a-f]{1,4}$/i.test(g) ? parseInt(g, 16) : NaN));
+  const head = groups(halves[0]);
+  const tail = halves.length === 2 ? groups(halves[1]) : [];
+  if ([...head, ...tail].some(Number.isNaN)) {
+    return null;
+  }
+  const missing = 8 - head.length - tail.length;
+  if (halves.length === 2 ? missing < 1 : missing !== 0) {
+    return null;
+  }
+  return [...head, ...new Array<number>(missing).fill(0), ...tail];
+};
+
+// Only global unicast 2000::/3 is external. The transition prefixes that embed an
+// IPv4 address are judged by that address: NAT64 64:ff9b::/96 (last 32 bits) and
+// 6to4 2002::/16 (groups 2 and 3). Everything else is refused, including the
+// unspecified, loopback, IPv4-mapped and IPv4-compatible ::/96 forms, unique local
+// and link-local, site-local, multicast, the NAT64 local-use prefix 64:ff9b:1::/48,
+// the discard prefix 100::/64, and the IETF block 2001::/23 (Teredo, which obfuscates
+// its address, and the benchmarking and ORCHID blocks) and documentation 2001:db8::/32.
+const nonPublicIPv6 = (inner: string): boolean => {
+  const g = ipv6Groups(inner);
+  if (g === null) {
+    return true;
+  }
+  const [g0, g1, g2, g3, g4, g5, g6] = g;
+  if (g0 === 0x64 && g1 === 0xff9b && g2 === 0 && g3 === 0 && g4 === 0 && g5 === 0) {
+    return nonPublicIPv4(g6 >> 8, g6 & 0xff);
+  }
+  if (g0 === 0x2002) {
+    return nonPublicIPv4(g1 >> 8, g1 & 0xff);
+  }
+  if ((g0 & 0xe000) !== 0x2000) {
+    return true;
+  }
+  return (g0 === 0x2001 && g1 < 0x0200) || (g0 === 0x2001 && g1 === 0x0db8);
+};
+
 const isNonPublicHost = (hostname: string): boolean => {
   const host = hostname.replace(/\.+$/, '');
   if (!host.startsWith('[') && !host.includes('.')) {
@@ -39,20 +94,10 @@ const isNonPublicHost = (hostname: string): boolean => {
   }
   const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
   if (v4) {
-    const a = Number(v4[1]);
-    const b = Number(v4[2]);
-    return a === 0 || a === 10 || a === 127 || a >= 224
-      || (a === 100 && b >= 64 && b <= 127)   // CGNAT
-      || (a === 169 && b === 254)             // link-local, cloud metadata
-      || (a === 172 && b >= 16 && b <= 31)
-      || (a === 192 && b === 168);
+    return nonPublicIPv4(Number(v4[1]), Number(v4[2]));
   }
   if (host.startsWith('[')) {
-    const inner = host.slice(1, -1);
-    return inner.startsWith('::')   // unspecified, loopback, IPv4-mapped and compatible
-      || /^f[cd]/.test(inner)       // fc00::/7 unique local
-      || /^fe[89ab]/.test(inner)    // fe80::/10 link-local
-      || /^ff/.test(inner);         // multicast
+    return nonPublicIPv6(host.slice(1, -1));
   }
   return false;
 };
