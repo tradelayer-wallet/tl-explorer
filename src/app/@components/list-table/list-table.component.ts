@@ -19,9 +19,6 @@ export class ListTableComponent {
   linkType: string = '';
 
   link(value: string): string[] {
-    if(!value) {
-      return [''];
-    }
     return getLinkFromPropertyType(this.linkType, value);
   }
 }

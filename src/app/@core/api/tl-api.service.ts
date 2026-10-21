@@ -1,8 +1,9 @@
 import { Injectable } from "@angular/core";
 import { environment } from "src/environments/environment";
 import { HttpClient } from "@angular/common/http";
-import { catchError, map, Observable, of } from "rxjs";
+import { catchError, EMPTY, map, Observable, of } from "rxjs";
 import { Router } from "@angular/router";
+import { canonicalLookup, LookupKind } from "src/app/@core/lookup-value";
 
 export enum PropertyCacheType {
     NativeFees = 0,
@@ -41,6 +42,63 @@ const BLOCKS: Block[] = Array.from(Array(10)).map((n,i)=>(
 
 
 
+// Route params are interpolated into backend URL paths. Without validation, a
+// crafted link (e.g. `..%2F..%2Fsome_other_endpoint`) lets the browser smuggle
+// GET requests to unrelated endpoints on the RPC proxy (security review H3).
+//
+// Every API path is built by TradeLayerApi.get(), a tagged template whose
+// interpolations must be ApiParam values. A raw string is a type error. An
+// object literal shaped like ApiParam is a type error too, because the class has
+// a private member. get() also refuses at runtime anything that the factories
+// did not create, so an `as unknown as ApiParam` cast cannot reach the URL.
+// What counts as a valid txid, address or id is defined once, in lookup-value.ts.
+
+export type IdParam = number | string;
+
+class ApiParam {
+    // The private member makes the type nominal: an object literal with the
+    // same shape is not assignable to ApiParam.
+    private constructor(private readonly encoded: string | null) {}
+
+    // Every instance the factories create is recorded here. segment() accepts
+    // only these, so a runtime forgery (Object.create, a double cast) is refused.
+    private static readonly issued = new WeakSet<ApiParam>();
+
+    private static create(encoded: string | null): ApiParam {
+        const param = new ApiParam(encoded);
+        // Frozen so that code holding an issued value cannot rewrite its encoded
+        // segment at runtime (defineProperty on the instance now throws).
+        Object.freeze(param);
+        ApiParam.issued.add(param);
+        return param;
+    }
+
+    // The encoded path segment, or null unless `param` came from a factory and
+    // its validator accepted the input.
+    static segment(param: unknown): string | null {
+        return (param instanceof ApiParam && ApiParam.issued.has(param))
+            ? param.encoded
+            : null;
+    }
+
+    static txid(value: unknown): ApiParam {
+        return ApiParam.of('txid', value);
+    }
+
+    static address(value: unknown): ApiParam {
+        return ApiParam.of('address', value);
+    }
+
+    static id(value: unknown): ApiParam {
+        return ApiParam.of('id', value);
+    }
+
+    private static of(kind: LookupKind, value: unknown): ApiParam {
+        const canonical = canonicalLookup(kind, value);
+        return ApiParam.create(canonical === null ? null : encodeURIComponent(canonical));
+    }
+}
+
 @Injectable({
     providedIn: 'root',
 })
@@ -51,113 +109,104 @@ export class TradeLayerApi {
     ) {}
 
     validateAddress(address: string): Observable<any> {
-        const path = `/addresses/${address}/validate/`;
-        return this.get(path);
+        return this.get`/addresses/${ApiParam.address(address)}/validate/`;
     }
 
     getBalance(address: string): Observable<any> {
-        const path = `/tl_getAllBalancesForAddress/${address}`;
-        return this.get(path);
+        return this.get`/tl_getAllBalancesForAddress/${ApiParam.address(address)}`;
     }
 
     getUnvestedBalance(address: string): Observable<any> {
-        const path = `/addresses/${address}/unvested_balance`;
-        return this.get(path);
+        return this.get`/addresses/${ApiParam.address(address)}/unvested_balance`;
     }
 
     getProperties(): Observable<any> {
-        const path = '/tl_listproperties';
-        return this.get(path);
+        return this.get`/tl_listproperties`;
     }
 
-    getPropData(id: number): Observable<any>  {
-        const path = `/tl_getproperty/${id}`;
-        return this.get(path);
+    getPropData(id: IdParam): Observable<any>  {
+        return this.get`/tl_getproperty/${ApiParam.id(id)}`;
     }
 
-    getPropCurrencyTotal(id: number): Observable<any>  {
-        const path = `/token/${id}/currency_total`;
-        return this.get(path);
+    getPropCurrencyTotal(id: IdParam): Observable<any>  {
+        return this.get`/token/${ApiParam.id(id)}/currency_total`;
     }
 
-    getPropCache(id: number, cacheType: PropertyCacheType = PropertyCacheType.Total): Observable<any>  {
-        const path = `/tl_propertyFeeCache/${id}`;  ///cache?cacheType=${cacheType}`;
-        return this.get(path);
+    getPropCache(id: IdParam, cacheType: PropertyCacheType = PropertyCacheType.Total): Observable<any>  {
+        return this.get`/tl_propertyFeeCache/${ApiParam.id(id)}`;  ///cache?cacheType=${cacheType}`;
     }
 
-    getPropVestingInfo(id: number) {
-        const path = `/token/${id}/vesting_info`;
-        return this.get(path);
+    getPropVestingInfo(id: IdParam) {
+        return this.get`/token/${ApiParam.id(id)}/vesting_info`;
     }
 
-    getPropLtcVolume(id: number, startBlock: number, endBlock: number): Observable<any>  {
-        const path = `/token/${id}/ltc_volume?startBlock=${startBlock}&endBlock=${endBlock}`;
-        return this.get(path);
+    getPropLtcVolume(id: IdParam, startBlock: IdParam, endBlock: IdParam): Observable<any>  {
+        return this.get`/token/${ApiParam.id(id)}/ltc_volume?startBlock=${ApiParam.id(startBlock)}&endBlock=${ApiParam.id(endBlock)}`;
     }
 
-    getContract(id: number): Observable<any> {
-        const path = `/contracts/${id}`;
-        return this.get(path);
+    getContract(id: IdParam): Observable<any> {
+        return this.get`/contracts/${ApiParam.id(id)}`;
     }
 
-    getContractOpenInterest(id: number): Observable<any> {
-        const path = `/contracts/${id}/open_interest`;
-        return this.get(path);
+    getContractOpenInterest(id: IdParam): Observable<any> {
+        return this.get`/contracts/${ApiParam.id(id)}/open_interest`;
     }
-    getContractTradeHistory(id: number): Observable<any> {
-        const path = `/contracts/${id}/trade_history`;
-        return this.get(path);
+    getContractTradeHistory(id: IdParam): Observable<any> {
+        return this.get`/contracts/${ApiParam.id(id)}/trade_history`;
     }
-    getContractTradeHistoryUnfiltered(id: number): Observable<any> {
-        const path = `/contracts/${id}/trade_history_unfiltered`;
-        return this.get(path);
+    getContractTradeHistoryUnfiltered(id: IdParam): Observable<any> {
+        return this.get`/contracts/${ApiParam.id(id)}/trade_history_unfiltered`;
     }
-    
+
     getNativeContracts(): Observable<any> {
-        const path = '/contracts/natives';
-        return this.get(path);
+        return this.get`/contracts/natives`;
     }
 
     getOracleContracts(): Observable<any> {
-        const path = '/tl_listoracles';
-        return this.get(path);
+        return this.get`/tl_listoracles`;
     }
 
     getChainInfo(): Observable<any> {
-        const path = '/tl_getchaininfo';
-        return this.get(path);
+        return this.get`/tl_getchaininfo`;
     }
 
     getTop10Blocks(): Observable<any> {
         //return of(BLOCKS.map(b=>({ blockId: b.blockId, date: b.date.toISOString(), tx: b.tx.length })));
-        const path = '/tl_gettop10blocks';
-        return this.get(path);
+        return this.get`/tl_gettop10blocks`;
     }
 
     getTransaction(id: string): Observable<any> {
         //return of({});
-        const path = `/tl_gettransaction/${id}`;
-        return this.get(path);
+        return this.get`/tl_gettransaction/${ApiParam.txid(id)}`;
     }
 
     getTransactionsForAddress(addr: string): Observable<any> {
         //return of(TXs.filter(x=>x.to == addr || x.from == addr));
-        const path = `/tl_gettransactionsforaddress/${addr}`;
-        return this.get(path);
+        return this.get`/tl_gettransactionsforaddress/${ApiParam.address(addr)}`;
     }
-    
-    getTransactionsForBlock(bid: number): Observable<any> {
+
+    getTransactionsForBlock(bid: IdParam): Observable<any> {
         // let b = BLOCKS.find(b=>b.blockId == bid)
         // return of(b?.tx);
-        const path = `/tl_gettransactionsforblock/${bid}`;
-        return this.get(path);
+        return this.get`/tl_gettransactionsforblock/${ApiParam.id(bid)}`;
     }
 
     private get apiUrl() {
         return environment.apiUrl;
     }
-    
-    private get(path: string) : Observable<any> {
+
+    // The only place an API URL is built. The literal parts come from this file.
+    // Every interpolated value must be an ApiParam: if one is invalid (or is not
+    // an ApiParam at all), the user goes to the error page and no request is sent.
+    private get(strings: TemplateStringsArray, ...params: ApiParam[]): Observable<any> {
+        let path = strings[0];
+        for (let i = 0; i < params.length; i++) {
+            const encoded = ApiParam.segment(params[i]);
+            if (encoded === null) {
+                return this.invalidParam();
+            }
+            path += encoded + strings[i + 1];
+        }
         const url = `${this.apiUrl}${path}`;
         return this.http.get(url)
             .pipe(
@@ -170,10 +219,26 @@ export class TradeLayerApi {
                 map(x=>x),
                 catchError((error) => {
                     console.log(error);
-                    const message = error?.message || error;
-                    return this.router.navigate(['error'], {
-                        queryParams: { message }});
+                    // Same contract as invalidParam(): navigate to the error
+                    // page and complete without emitting the navigation result.
+                    this.navigateToError(String(error?.message || error));
+                    return EMPTY;
                 })
             );
+    }
+
+    private invalidParam(): Observable<never> {
+        // Navigate to the error page but emit nothing downstream: callers
+        // chain these observables into data pipelines, and emitting the
+        // navigation result (`true`) made tables briefly render `true` and
+        // chained lookups fire extra error navigations. See adversarial review.
+        this.navigateToError('Invalid lookup parameter');
+        return EMPTY;
+    }
+
+    // The message travels in navigation state. A query parameter would let any link
+    // put text on the explorer's own page (`/error?message=...`).
+    private navigateToError(message: string): void {
+        this.router.navigate(['error'], { state: { message: message.slice(0, 300) } });
     }
 }

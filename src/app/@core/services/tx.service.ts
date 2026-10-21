@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { IdParam } from "../api/tl-api.service";
 import { ApiService } from "./api.service";
 
 @Injectable({
@@ -22,7 +23,7 @@ export class TxService {
         return this.tlApi.getTransactionsForAddress(addr);
     }
 
-    getTransactionsForBlock(bid: number) {
+    getTransactionsForBlock(bid: IdParam) {
         return this.tlApi.getTransactionsForBlock(bid);
     }
 }

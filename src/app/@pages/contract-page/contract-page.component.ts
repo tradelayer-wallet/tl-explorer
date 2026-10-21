@@ -17,6 +17,7 @@ export class ContractPageComponent implements OnInit {
     private contratService: ContractService) { }
 
   ngOnInit(): void {
+    // Passed through unparsed: TradeLayerApi validates route ids in one place.
     const contractId = this.route.snapshot.params?.['contractId'];
     this.contract$ = this.contratService.getContract(contractId)
       .pipe(shareReplay(1));

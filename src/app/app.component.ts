@@ -14,16 +14,20 @@ export class AppComponent {
   ) { }
 
   search(value:string) {
-    if (!value) {
+    const query = (value || '').trim();
+    if (!query) {
       return;
     }
     this.searchValue = '';
 
-    const routeArray = value.length === 64
-      ? ['tx', value]
-      : Number.isNaN(parseInt(value))
-        ? ['addresses', value]
-        : ['blocks', parseInt(value)];
+    // Only an all-digit query is a block height. parseInt() used to send any
+    // query that started with a digit (e.g. a P2SH address starting with '3')
+    // to a block page. The lookup itself is validated in TradeLayerApi.
+    const routeArray = query.length === 64
+      ? ['tx', query]
+      : /^\d+$/.test(query)
+        ? ['blocks', query]
+        : ['addresses', query];
     this.router.navigate(routeArray);
   }
 }

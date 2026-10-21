@@ -1,3 +1,5 @@
+import { canonicalLookup, LookupKind } from 'src/app/@core/lookup-value';
+
 const ADDRESS_PROPERTIES = [
   'issuer',
 ];
@@ -43,10 +45,19 @@ export const TypeToHandler: {
   transaction: (value: string) => ['/', 'tx', value],
   contract: (value: string) => ['/', 'contracts', value],
   property: (value: string) => ['/', 'properties', value],
-  url: (value: string) => ['/', value]
+  // Never a router link: URLs go through safeExternalHref() as an href instead.
+  // A router path built from on-chain text would be an in-app navigation sink.
+  url: (_value: string) => []
 };
 
 export const PropertyToPropertyType: { [key: string]: PROPERTY_TYPES; } = {};
+
+// Own keys only: a plain object would otherwise answer for inherited names such
+// as `constructor` or `__proto__`.
+export const propertyTypeOf = (key: string): PROPERTY_TYPES | undefined =>
+  Object.prototype.hasOwnProperty.call(PropertyToPropertyType, key)
+    ? PropertyToPropertyType[key]
+    : undefined;
 
 Object.entries(PropertyTypeToProperties)
   .forEach(([propertyType, property]: [string, string[]]) => {
@@ -58,21 +69,31 @@ Object.entries(PropertyTypeToProperties)
 const noLink: LinkFunction = function() {return []}
 
 export const getLinkFromPropertyName = (propertyName: string, value: string): string[] => {
-  let propertyType = PropertyToPropertyType[propertyName];
-  return getLinkFromPropertyType(propertyType, value);
+  return getLinkFromPropertyType(propertyTypeOf(propertyName) ?? '', value);
 }
 
-export const getLinkFromPropertyType = (propertyType: string, value: string): string[] => {
-  let linker: LinkFunction = noLink;
+// The lookup kind each link target takes its value as. A value of another shape is
+// not linked: the value goes into a router path, and Angular resolves `..` and `/`
+// inside it, so an unchecked value could steer a link to another page while its
+// text says otherwise. The shape is the one the API request uses (lookup-value.ts).
+const LOOKUP_KIND: { [key in PROPERTY_TYPES]: LookupKind | null } = {
+  blocks: 'id',
+  address: 'address',
+  contract: 'id',
+  url: null,
+  transaction: 'txid',
+  property: 'id',
+};
 
-  if(isPropertyType(propertyType)) {
-    linker = TypeToHandler[propertyType];
+export const getLinkFromPropertyType = (propertyType: string, value: string | number): string[] => {
+  if (!isPropertyType(propertyType)) {
+    return noLink(String(value));
   }
-
-  return linker(value);
+  const kind = LOOKUP_KIND[propertyType];
+  const canonical = kind ? canonicalLookup(kind, value) : null;
+  return canonical === null ? [] : TypeToHandler[propertyType](canonical);
 }
 
 export const isLinkable = (key: string): boolean => {
-  const propertyType: PROPERTY_TYPES = PropertyToPropertyType[key];
-  return !!propertyType;
+  return propertyTypeOf(key) !== undefined;
 }

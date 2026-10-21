@@ -1,12 +1,14 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { PROPERTY_TYPES, PropertyToPropertyType, isLinkable, getLinkFromPropertyName } from '../property-types';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { isLinkable, getLinkFromPropertyName, propertyTypeOf } from '../property-types';
+import { safeExternalHref } from 'src/app/@core/safe-link';
+import { isBlank } from 'src/app/@utils/pipes';
 
 @Component({
   selector: 'tl-possible-link',
   templateUrl: './possible-link.component.html',
   styleUrls: ['./possible-link.component.scss']
 })
-export class PossibleLinkComponent implements OnInit {
+export class PossibleLinkComponent implements OnChanges {
   @Input()
   public set key(value: unknown) {
     this._key = value as string;
@@ -27,19 +29,39 @@ export class PossibleLinkComponent implements OnInit {
 
   public isExternal: boolean = false;
 
+  // Safe, fully-validated href for external links (null = do not render a
+  // link). Built in TS so the template never concatenates raw on-chain data.
+  public externalHref: string | null = null;
+
   public link: string[]=[];
 
-  ngOnInit(): void {
-    if(!this.value) {
+  // Derived state must be recomputed whenever either input changes: the
+  // component instance is reused by *ngFor/async re-emissions while the
+  // projected label content stays live, so an ngOnInit-only computation left
+  // a stale href/routerLink from the previous row's data. See adversarial
+  // review.
+  ngOnChanges(changes: SimpleChanges): void {
+    if ('key' in changes || 'value' in changes) {
+      this.recompute();
+    }
+  }
+
+  private recompute(): void {
+    // Reset first: early-returning below must not leave the previous
+    // instance's link or href behind.
+    this.isExternal = false;
+    this.externalHref = null;
+    this.link = [];
+    if (isBlank(this.value)) {
       return;
     }
     if (!isLinkable(this.key)) {
       return;
     }
 
-    const propertyType: PROPERTY_TYPES = PropertyToPropertyType[this.key];
-    this.isExternal = propertyType === 'url';
+    this.isExternal = propertyTypeOf(this.key) === 'url';
     if (this.isExternal) {
+      this.externalHref = safeExternalHref(this.value);
       return;
     }
 

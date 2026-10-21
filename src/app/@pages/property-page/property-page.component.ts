@@ -25,7 +25,8 @@ export class PropertyPageComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    const propertyId = parseFloat(this.route.snapshot.params?.['propertyId']);
+    // Passed through unparsed: TradeLayerApi validates route ids in one place.
+    const propertyId = this.route.snapshot.params?.['propertyId'];
     this.propData$ = this.propertyService.getPropData(propertyId)
       .pipe(shareReplay(1));
     // this.propCurrencyTotal$ = this.propData$

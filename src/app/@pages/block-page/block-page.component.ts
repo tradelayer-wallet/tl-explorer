@@ -16,13 +16,9 @@ export class BlockPageComponent implements OnInit{
   ) { }
 
   ngOnInit(): void {
-    const bid = this.getBlockId();
+    // Passed through unparsed: TradeLayerApi validates route ids in one place.
+    const bid = this.route.snapshot.params?.['blockId'];
     if (!bid) return;
     this.tx$ = this.txService.getTransactionsForBlock(bid);
-  }
-
-  getBlockId() {
-    let bid = parseInt(this.route.snapshot.params?.['blockId']);
-    return Number.isNaN(bid) ? 0 : bid;
   }
 }

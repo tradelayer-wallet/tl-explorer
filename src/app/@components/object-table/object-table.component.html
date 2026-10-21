@@ -6,7 +6,7 @@
           <td>{{ row.key }}</td>
           <td>
             <tl-possible-link [key]="row.key" [value]="row.value">
-              {{ row.value || '-'}}
+              {{ row.value | dash }}
             </tl-possible-link>
           </td>
       </tr>
