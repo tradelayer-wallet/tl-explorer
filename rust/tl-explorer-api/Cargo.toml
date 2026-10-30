@@ -1,0 +1,9 @@
+[package]
+name = "tl-explorer-api"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.90"
+publish = false
+description = "Typed API endpoints, page routes, link rules and mock-API path resolution for tl-explorer"
+
+[dependencies]

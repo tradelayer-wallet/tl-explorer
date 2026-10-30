@@ -1,0 +1,5 @@
+name = "tl_explorer_api"
+defaultTargets = ["TlExplorerApi"]
+
+[[lean_lib]]
+name = "TlExplorerApi"
