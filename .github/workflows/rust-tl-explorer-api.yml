@@ -2,6 +2,9 @@ name: Rust explorer API contract
 on:
   pull_request:
     paths: ['rust/tl-explorer-api/**', 'mock-api/**', '.github/workflows/rust-tl-explorer-api.yml']
+  push:
+    branches: [feat/rust-port]
+    paths: ['rust/tl-explorer-api/**', 'mock-api/**', '.github/workflows/rust-tl-explorer-api.yml']
   workflow_dispatch:
 permissions:
   contents: read
